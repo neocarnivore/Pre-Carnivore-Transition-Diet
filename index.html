@@ -812,3 +812,39 @@ init();
 </script>
 </body>
 </html>
+<script type="module">
+(() => {
+  const btn = document.getElementById('calcBtn');
+
+  // 既存の旧リスナーが残っていても、こちらが上書きで働く
+  const onCalcClick = (e) => {
+    e?.preventDefault?.();
+    try {
+      if (typeof requireFilled === 'function' && typeof calc === 'function') {
+        if (typeof enforceHabitRules === 'function') enforceHabitRules();
+        // 初期化（未選択でも動かす）
+        window.selectedWeek    = window.selectedWeek    || 1;
+        window.selectedDayAbs  = window.selectedDayAbs  || 1;
+
+        if (requireFilled()) {
+          calc();
+        } else {
+          // 入力不足時は既存の alert() が動作する前提
+        }
+      } else {
+        alert('calc() または requireFilled() が見つかりません。\n古いスクリプトと衝突している可能性があります。');
+        console.error('Functions missing:', { requireFilled: typeof requireFilled, calc: typeof calc });
+      }
+    } catch (err) {
+      console.error(err);
+      alert('計算中にエラー: ' + (err?.message || err));
+    }
+  };
+
+  // ボタンにイベントを紐付け（旧ハンドラがあっても共存可）
+  btn?.addEventListener('click', onCalcClick);
+
+  // 万一のためグローバルにもフックを残す（HTML側 onclick でも呼べる）
+  window.NeoDiet = Object.assign(window.NeoDiet || {}, { onCalcClick });
+})();
+</script>
