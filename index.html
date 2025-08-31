@@ -33,7 +33,7 @@
   button{cursor:pointer;background:var(--acc);border:none;color:#fff;font-weight:700}
 
   .row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-  .row6{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+  .row6{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
 
   .formGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
   .formGrid > .pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -60,7 +60,7 @@
   .tab{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
   .tab button{background:transparent;border:1px solid var(--border);color:var(--text);padding:10px;border-radius:10px}
   .tab button.active{background:var(--acc);color:#fff;border-color:transparent}
-
+  .tab.duo{grid-template-columns:repeat(2,1fr)}
   .tab.weeks{grid-template-columns:repeat(6,1fr)}
   .tab.days{grid-template-columns:repeat(7,1fr)}
   .tab.days button{padding:8px 6px;font-size:12px}
@@ -81,6 +81,10 @@
   .footerNote{color:#000 !important}
   .light .footerNote{color:#000 !important}
   .footerNote a{color:var(--p);text-decoration:underline}
+  /* ダーク時の可読性向上（黒文字維持） */
+  @media (prefers-color-scheme: dark){
+    body:not(.light) .footerNote{background:#fff;border-radius:10px;padding:8px 10px;display:inline-block}
+  }
 
   /* 画面上部に一時トースト（デバッグ/未入力用） */
   #toast{position:fixed;top:10px;left:50%;transform:translateX(-50%);background:#000a;padding:10px 14px;border-radius:10px;color:#fff;font-size:12px;z-index:2000;display:none}
@@ -271,7 +275,7 @@
       <h3>糖質摂取量推移</h3>
       <div class="chartPickers">
         <div>
-          <label>n週間目</label>
+          <label>n週目</label>
           <div class="tab weeks" id="chartWeekTabs" role="tablist" aria-label="週" style="display:none"></div>
         </div>
         <div>
@@ -281,7 +285,7 @@
       </div>
       <div class="kpi chartCard" style="border:none;background:transparent;box-shadow:none">
         <div class="chartHeader">
-          <div class="small" id="chartTitle" style="font-weight:700">4週間で移行する場合</div>
+          <div class="small" id="chartTitle" style="font-weight:700">4週で移行する場合</div>
         </div>
         <canvas id="wtChart" height="260" aria-label="糖質摂取量推移グラフ" role="img"></canvas>
       </div>
@@ -476,7 +480,7 @@ function drawCarbChart({sex,weeks,series}){
 
   const styles=getComputedStyle(document.body);
   ctx.strokeStyle=styles.getPropertyValue('--grid').trim(); ctx.lineWidth=1;
-  for(let i=0;i<=3;i++){ const gy=minY+(maxY-minY)/3*i, yy=yTo(gy); ctx.beginPath(); ctx.moveTo(padL,yy); ctx.lineTo(W-padR,yy); ctx.stroke(); }
+  for(let i=0;i<=3;i++){ const gy=minY+(maxY-minY)/3*i; const yy=yTo(gy); ctx.beginPath(); ctx.moveTo(padL,yy); ctx.lineTo(W-padR,yy); ctx.stroke(); }
   ctx.strokeStyle=styles.getPropertyValue('--axisLine').trim(); ctx.lineWidth=1.5;
   ctx.beginPath(); ctx.moveTo(padL, yTo(minY)); ctx.lineTo(W-padR, yTo(minY)); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(padL, yTo(minY)); ctx.lineTo(padL, padT); ctx.stroke();
@@ -598,7 +602,6 @@ function calc(){
   $('mixCard').style.display='block';
 
   /* 食材配分 */
-  const VEG_GRAIN_100 = vegGrainKcal100By(riceMid, rootMid);
   const KCAL_PER_100G = { meat:KCAL_PER_100G_BASE.meat, fish:KCAL_PER_100G_BASE.fish, eggs:KCAL_PER_100G_BASE.eggs, dairy:KCAL_PER_100G_BASE.dairy, veggrain:VEG_GRAIN_100, fruit:KCAL_PER_100G_BASE.fruit };
   const plantKcalBase = (carb_g*4);
   const vgShare = 0.6, frShare = 0.4;
@@ -633,7 +636,7 @@ function calc(){
   updateBars(protein_g*4, fat_g*9, plantKcalBase, (protein_g*4 + fat_g*9 + plantKcalBase));
 
   // グラフ＆週日タブ
-  $('chartTitle').textContent = `${planWeeks}週間で移行する場合（現在：${selectedWeek}週目／${selectedDayAbs}日目）`;
+  $('chartTitle').textContent = `${planWeeks}週で移行する場合（現在：${selectedWeek}週目／${selectedDayAbs}日目）`;
   drawCarbChart({sex, weeks:planWeeks, series:weeklyCarb});
   renderChartTabs(planWeeks);
 
@@ -655,7 +658,7 @@ function renderChartTabs(planWeeks){
   wCont.innerHTML = '';
   for(let w=1; w<=planWeeks; w++){
     const b=document.createElement('button');
-    b.dataset.week=String(w); b.textContent=`${w}週間目`; b.type='button';
+    b.dataset.week=String(w); b.textContent=`${w}週目`; b.type='button';
     if(selectedWeek===w) b.classList.add('active');
     wCont.appendChild(b);
   }
@@ -713,7 +716,6 @@ $('fixBtn').addEventListener('click', ()=>{
 /* 計算ボタン（根本的に単純化） */
 $('calcBtn').addEventListener('click', ()=>{
   try{
-    // 初期化（未選択でも動かす）
     if(!selectedWeek) selectedWeek=1;
     if(!selectedDayAbs) selectedDayAbs=1;
     enforceHabitRules();
@@ -724,9 +726,16 @@ $('calcBtn').addEventListener('click', ()=>{
   }
 });
 
+/* Enterキーで計算 */
+document.addEventListener('keydown', (e)=>{
+  if(e.key==='Enter'){ e.preventDefault(); $('calcBtn').click(); }
+});
+
 /* 初期化：カード非表示 */
 ['baseCard','macroCard','mixCard'].forEach(id=>$(id).style.display='none');
 $('fitnessType').disabled=true; $('onoff').disabled=true;
+/* テーマボタン表記の初期同期 */
+updateThemeBtn();
 
 /* リサイズでグラフ再描画 */
 window.addEventListener('resize', ()=>{ if(window._chartArgs) drawCarbChart(window._chartArgs); });
