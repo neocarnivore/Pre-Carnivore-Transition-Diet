@@ -19,12 +19,10 @@
   *{box-sizing:border-box;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif}
   body{margin:0;background:linear-gradient(180deg,var(--bg),#10131b00);color:var(--text)}
   header{
-    position:sticky;top:0;z-index:1000;
-    display:flex;justify-content:space-between;align-items:center;gap:8px;
+    position:sticky;top:0;z-index:1000;display:flex;justify-content:space-between;align-items:center;gap:8px;
     padding:16px 14px 6px;font-weight:800;font-size:clamp(16px,2.4vw,20px);
     background:linear-gradient(180deg,var(--bg),rgba(0,0,0,0.0));
-    border-bottom:1px solid var(--border);
-    backdrop-filter:saturate(1.1);
+    border-bottom:1px solid var(--border);backdrop-filter:saturate(1.1);
   }
   .wrap{padding:10px;max-width:1080px;margin:auto}
   .card{background:var(--card);border-radius:14px;padding:14px;margin:10px 0;box-shadow:0 8px 24px rgba(0,0,0,.18);border:1px solid var(--border)}
@@ -86,7 +84,7 @@
     body:not(.light) .footerNote{background:#fff;border-radius:10px;padding:8px 10px;display:inline-block}
   }
 
-  /* 画面上部に一時トースト（デバッグ/未入力用） */
+  /* トースト */
   #toast{position:fixed;top:10px;left:50%;transform:translateX(-50%);background:#000a;padding:10px 14px;border-radius:10px;color:#fff;font-size:12px;z-index:2000;display:none}
 </style>
 </head>
@@ -301,11 +299,10 @@
 <script>
 'use strict';
 
-/* ====== 最重要：根本対策 ======
-   1) scriptは <body> 最下部（今ここ）に1本だけ
-   2) type="module" も外部JS参照も使わない
-   3) クリックは addEventListener + 念のため type="button"
-   4) 実行時例外はトーストで可視化
+/* ====== 安定動作の基本方針 ======
+   - 外部JSなし / 1ファイル完結
+   - クリックは addEventListener + type="button"
+   - 例外はトースト表示（“無反応”をなくす）
 ================================= */
 
 const $ = id => document.getElementById(id);
@@ -318,10 +315,10 @@ function toast(msg, ms=1600){
   clearTimeout(toast._to); toast._to=setTimeout(()=>{t.style.display='none';}, ms);
 }
 
-/* エラーを可視化（“何も起きない”の撲滅） */
+/* グローバルエラーハンドラ */
 window.addEventListener('error', e=>{
   console.error(e.error || e.message);
-  toast('エラー: ' + (e.error?.message || e.message || '不明'));
+  toast('計算中にエラー：' + (e.error?.message || e.message || '不明'));
 });
 
 /* テーマ */
@@ -352,26 +349,18 @@ function ensureDaySelectionForCalc(planWeeks){
   });
 });
 
-/* 運動習慣制御 */
-function setNoneOptionVisible(selectId, visible){
-  const sel=$(selectId); if(!sel) return;
-  const opt = Array.from(sel.options).find(o=>o.value==='none'); if(!opt) return;
-  opt.hidden=!visible; opt.disabled=!visible;
-}
+/* 運動習慣ルール（iOS Safari 対策：<option> は触らない） */
 function enforceHabitRules(){
   const habit=$('habit').value;
   const isNone=(habit==='1.2'||!habit);
+  const ft=$('fitnessType'), oo=$('onoff');
   if(isNone){
-    setNoneOptionVisible('fitnessType',true);
-    setNoneOptionVisible('onoff',true);
-    $('fitnessType').disabled=true; $('onoff').disabled=true;
-    $('fitnessType').value='none'; $('onoff').value='none';
+    ft.disabled=true; oo.disabled=true;
+    ft.value='none';  oo.value='none';
   }else{
-    setNoneOptionVisible('fitnessType',false);
-    setNoneOptionVisible('onoff',false);
-    $('fitnessType').disabled=false; $('onoff').disabled=false;
-    if($('fitnessType').value==='none') $('fitnessType').value='';
-    if($('onoff').value==='none') $('onoff').value='';
+    ft.disabled=false; oo.disabled=false;
+    if(ft.value==='none') ft.value='';
+    if(oo.value==='none') oo.value='';
   }
 }
 $('habit').addEventListener('change', enforceHabitRules);
@@ -393,8 +382,11 @@ function startCarbFromIntake(sex, riceMid, breadMid, rootMid){
 }
 function decideWeeks(initialCarb){ if(initialCarb>=300) return 6; if(initialCarb>=230) return 5; return 4; }
 function weeklyTargets(initial,weeks){
-  const arr=[]; for(let i=1;i<=weeks;i++){ const t=(i-1)/((weeks-1)||1); const lin=initial-(initial-100)*t; const wiggle=Math.sin(i*1.7)*4 + Math.sin(i*0.53)*3; arr.push(round5(lin+wiggle)); }
-  return arr;
+  const arr=[]; for(let i=1;i<=weeks;i++){ const t=(i-1)/((weeks-1)||1);
+    const lin=initial-(initial-100)*t;
+    const wiggle=Math.sin(i*1.7)*4 + Math.sin(i*0.53)*3;
+    arr.push(round5(lin+wiggle));
+  } return arr;
 }
 function dayBandAdjustFromAbsDay(absDay){
   const band=((absDay-1)%7)+1; const map=[0,+6,+4,+2,-2,-4,-6,-8]; return map[band]||0;
@@ -421,7 +413,7 @@ function electrolyteSchedule({w,habit,fitnessType,onoff,carb_g,kcal,tdee}){
   return { na_g:+(na/1000).toFixed(2), k_g:+(k/1000).toFixed(2), mg_mg:Math.round(mg), salt_g:+(na/1000*2.54).toFixed(1) };
 }
 
-/* 入力検証（不足はトースト表示） */
+/* 入力検証 */
 function requireFilled(){
   const miss=[];
   if(!$('sex').value) miss.push('性別');
@@ -480,15 +472,17 @@ function drawCarbChart({sex,weeks,series}){
 
   const styles=getComputedStyle(document.body);
   ctx.strokeStyle=styles.getPropertyValue('--grid').trim(); ctx.lineWidth=1;
-  for(let i=0;i<=3;i++){ const gy=minY+(maxY-minY)/3*i; const yy=yTo(gy); ctx.beginPath(); ctx.moveTo(padL,yy); ctx.lineTo(W-padR,yy); ctx.stroke(); }
+  for(let i=0;i<=3;i++){ const gy=minY+(maxY-minY)/3*i, yy=yTo(gy); ctx.beginPath(); ctx.moveTo(padL,yy); ctx.lineTo(W-padR,yy); ctx.stroke(); }
   ctx.strokeStyle=styles.getPropertyValue('--axisLine').trim(); ctx.lineWidth=1.5;
   ctx.beginPath(); ctx.moveTo(padL, yTo(minY)); ctx.lineTo(W-padR, yTo(minY)); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(padL, yTo(minY)); ctx.lineTo(padL, padT); ctx.stroke();
 
   ctx.fillStyle=styles.getPropertyValue('--axis').trim();
   ctx.font=`${Math.round(W/60)+11}px system-ui`;
-  xs.forEach((w)=>{ const label=`${w}週`; const tw=ctx.measureText(label).width; const xx=xTo(w); const xSafe=Math.min(Math.max(xx-tw/2, padL), W-padR-tw); ctx.fillText(label, xSafe, H-16); });
-  [minY, (minY+maxY)/2, maxY].forEach(val=>{ const label=`${Math.round(val)}g`; const tw=ctx.measureText(label).width; const yy=yTo(val); const yClamped=Math.min(Math.max(yy-4, padT+14), H-padB-8); ctx.fillText(label, Math.max(padL-tw-10,6), yClamped); });
+  xs.forEach((w)=>{ const label=`${w}週`; const tw=ctx.measureText(label).width; const xx=xTo(w);
+    const xSafe=Math.min(Math.max(xx-tw/2, padL), W-padR-tw); ctx.fillText(label, xSafe, H-16); });
+  [minY, (minY+maxY)/2, maxY].forEach(val=>{ const label=`${Math.round(val)}g`; const tw=ctx.measureText(label).width; const yy=yTo(val);
+    const yClamped=Math.min(Math.max(yy-4, padT+14), H-padB-8); ctx.fillText(label, Math.max(padL-tw-10,6), yClamped); });
 
   ctx.save(); ctx.beginPath(); ctx.rect(padL, padT, plotW, plotH); ctx.clip();
   ctx.strokeStyle="#48d1b5"; ctx.lineWidth=3; ctx.beginPath();
@@ -559,13 +553,13 @@ function calc(){
     }
     const addedFatG = (needFatG - (needKcal/9));
     fat_g += Math.max(0, addedFatG);
-    return {protein_g, carb_g, fat_g, adjusted:true, reason:"※脂質下限（0.6g/kg）を確保するため糖質→タンパク質の順で自動調整しました。"};
+    return {protein_g, carb_g, fat_g, adjusted:true, reason:"※脂質下限（0.6g/kg）確保のため糖質→タンパクの順で自動調整。"};
   }
 
   if(fat_g<0){
     const pcK=pk+ck, s=Math.max(0,tdee/(pcK||1));
     protein_g*=s; carb_g*=s; fat_g=0; pk=protein_g*4; ck=carb_g*4; fk=0; kcal=tdee;
-    warnMsg = "※脂質が負になったため、TDEEを優先しP/Cを自動調整しました（脂質=0）。";
+    warnMsg = "※脂質が負になったため、TDEEを優先しP/Cを自動調整（脂質=0）。";
   }else{
     const adj = enforceFatFloor(protein_g, carb_g, fat_g, w);
     protein_g = adj.protein_g; carb_g = adj.carb_g; fat_g = adj.fat_g;
@@ -602,7 +596,11 @@ function calc(){
   $('mixCard').style.display='block';
 
   /* 食材配分 */
-  const KCAL_PER_100G = { meat:KCAL_PER_100G_BASE.meat, fish:KCAL_PER_100G_BASE.fish, eggs:KCAL_PER_100G_BASE.eggs, dairy:KCAL_PER_100G_BASE.dairy, veggrain:VEG_GRAIN_100, fruit:KCAL_PER_100G_BASE.fruit };
+  const KCAL_PER_100G = {
+    meat:KCAL_PER_100G_BASE.meat, fish:KCAL_PER_100G_BASE.fish,
+    eggs:KCAL_PER_100G_BASE.eggs, dairy:KCAL_PER_100G_BASE.dairy,
+    veggrain:VEG_GRAIN_100, fruit:KCAL_PER_100G_BASE.fruit
+  };
   const plantKcalBase = (carb_g*4);
   const vgShare = 0.6, frShare = 0.4;
   let kVegGrain = plantKcalBase * vgShare;
@@ -713,7 +711,7 @@ $('fixBtn').addEventListener('click', ()=>{
   $('fixSuggest').innerHTML = lines.length ? lines.map(s=>`<div>・${s}</div>`).join("") : "入力された実績に対する修正は特に必要ありません。";
 });
 
-/* 計算ボタン（根本的に単純化） */
+/* 計算ボタン */
 $('calcBtn').addEventListener('click', ()=>{
   try{
     if(!selectedWeek) selectedWeek=1;
@@ -731,15 +729,13 @@ document.addEventListener('keydown', (e)=>{
   if(e.key==='Enter'){ e.preventDefault(); $('calcBtn').click(); }
 });
 
-/* 初期化：カード非表示 */
+/* 初期化 */
 ['baseCard','macroCard','mixCard'].forEach(id=>$(id).style.display='none');
 $('fitnessType').disabled=true; $('onoff').disabled=true;
-/* テーマボタン表記の初期同期 */
 updateThemeBtn();
 
 /* リサイズでグラフ再描画 */
 window.addEventListener('resize', ()=>{ if(window._chartArgs) drawCarbChart(window._chartArgs); });
-
 </script>
 </body>
 </html>
