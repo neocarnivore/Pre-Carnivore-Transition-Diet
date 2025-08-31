@@ -1,7 +1,7 @@
 {
-  "name": "カーニボアプラナー",
-  "short_name": "Keto Planner",
-  "start_url": "./",
+  "name": "Transition Diet, Crafted by Neo",
+  "short_name": "NeoDiet",
+  "start_url": ".",
   "display": "standalone",
   "background_color": "#0b0b0f",
   "theme_color": "#0b0b0f",
