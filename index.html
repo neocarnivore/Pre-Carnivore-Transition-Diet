@@ -50,7 +50,6 @@
   .small{font-size:12px;color:var(--muted)}
   .warn{color:var(--red);font-size:12px;margin-top:6px}
 
-  /* あなたの目安 */
   .macroBox .label{font-size:12px;color:var(--muted);font-weight:400;margin-bottom:2px}
   .macroBox .val{font-size:clamp(20px,3.5vw,24px);font-weight:800;line-height:1.1}
   .macroBox .kcal b{font-size:16px}
@@ -60,18 +59,16 @@
   .bar.p span{background:var(--p)} .bar.f span{background:var(--f)} .bar.c span{background:var(--c)}
   .light .bar{background:#fff;border:1.5px solid #d7e2ef}
 
-  .tab{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+  .tab{display:grid;gap:6px}
   .tab button{background:transparent;border:1px solid var(--border);color:var(--text);padding:10px;border-radius:10px}
   .tab button.active{background:var(--acc);color:#fff;border-color:transparent}
-  .tab.goals{grid-template-columns:repeat(3,1fr);width:100%}
-  .tab.duo{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
-  .tab.four{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+  .tab.duo{grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+  .tab.four{grid-template-columns:repeat(4,1fr)}
+  .tab.seven{grid-template-columns:repeat(7,1fr)}
 
-  /* n週目 only：横一列の左右ハーフ（1〜3 / 4〜6） */
+  /* n週目：横一列の左右ハーフ（1〜3 / 4〜6） */
   .weeksRow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .weeksRow .half{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-  /* n日目：7つのタブを綺麗に */
-  .tab.seven{grid-template-columns:repeat(7,1fr);gap:6px}
 
   .chartCard{display:flex;flex-direction:column;align-items:center}
   .chartHeader{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px;margin:6px 0 10px}
@@ -80,12 +77,10 @@
   .chartBtns button.active{background:var(--acc);color:#fff;border-color:transparent}
   canvas{width:min(820px,100%);height:auto;display:block;border-radius:10px;margin:0 auto}
 
-  /* フッターは常に黒 */
   .footerNote{color:#000 !important}
   .light .footerNote{color:#000 !important}
   .footerNote a{color:var(--p);text-decoration:underline}
 
-  /* 修正案フォーム（details内） */
   .fixgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0}
   @media (max-width:430px){ .fixgrid{grid-template-columns:repeat(2,1fr);} }
 </style>
@@ -100,6 +95,7 @@
   <!-- 入力 -->
   <div class="card">
     <div class="formGrid">
+
       <div class="pair">
         <div>
           <label>性別</label>
@@ -111,7 +107,7 @@
         </div>
         <div>
           <label>年齢（歳）</label>
-          <input id="age" type="number" inputmode="decimal" step="0.1" placeholder="例：30" min="12" max="99">
+          <input id="age" type="number" inputmode="decimal" step="0.1" placeholder="例：24" min="12" max="99">
         </div>
       </div>
 
@@ -122,15 +118,82 @@
         </div>
         <div>
           <label>体重（kg）</label>
-          <input id="weight" type="number" inputmode="decimal" step="0.1" placeholder="例：65" min="30" max="250">
+          <input id="weight" type="number" inputmode="decimal" step="0.1" placeholder="例：55" min="30" max="250">
         </div>
       </div>
 
+      <!-- 週/日：写真と同配置（左：n週目、右：n日目） -->
       <div class="pair">
+        <div>
+          <label>n週間目</label>
+          <div class="weeksRow" id="weekTabs" role="tablist" aria-label="n週目">
+            <div class="half">
+              <button type="button" data-week="1">1週間目</button>
+              <button type="button" data-week="2">2週間目</button>
+              <button type="button" data-week="3">3週間目</button>
+            </div>
+            <div class="half">
+              <button type="button" data-week="4">4週間目</button>
+              <button type="button" data-week="5">5週間目</button>
+              <button type="button" data-week="6">6週間目</button>
+            </div>
+          </div>
+        </div>
+        <div>
+          <label>n日目</label>
+          <div id="daysBlock" class="tab seven" style="display:none" role="tablist" aria-label="n日目">
+            <button type="button" data-day="1">1日目</button>
+            <button type="button" data-day="2">2日目</button>
+            <button type="button" data-day="3">3日目</button>
+            <button type="button" data-day="4">4日目</button>
+            <button type="button" data-day="5">5日目</button>
+            <button type="button" data-day="6">6日目</button>
+            <button type="button" data-day="7">7日目</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 米/パン -->
+      <div class="pair">
+        <div>
+          <label>1日にお米を食べる量</label>
+          <select id="riceSel">
+            <option value="" selected disabled>選択してください</option>
+            <option value="0">茶碗0〜1杯</option>
+            <option value="1">茶碗2〜3杯</option>
+            <option value="2">茶碗4〜5杯</option>
+            <option value="3">茶碗6杯以上</option>
+          </select>
+        </div>
+        <div>
+          <label>1日にパンを食べる量</label>
+          <select id="breadSel">
+            <option value="" selected disabled>選択してください</option>
+            <option value="0">0～1枚（個）</option>
+            <option value="1">2～3枚（個）</option>
+            <option value="2">4〜5枚（個）</option>
+            <option value="3">5枚（個）以上</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 根菜/運動習慣 -->
+      <div class="pair">
+        <div>
+          <label>1日に根菜を食べる量</label>
+          <select id="rootSel">
+            <option value="" selected disabled>選択してください</option>
+            <option value="0">拳0～1個分</option>
+            <option value="1">拳2～3個分</option>
+            <option value="2">拳4〜5個分</option>
+            <option value="3">拳6個分以上</option>
+          </select>
+        </div>
         <div>
           <label>運動習慣</label>
           <select id="habit">
             <option value="" selected disabled>選択してください</option>
+            <option value="none">選択しない</option>
             <option value="1.2">ほぼ運動しない</option>
             <option value="1.375">週1〜2日</option>
             <option value="1.55">週3〜4日</option>
@@ -138,10 +201,15 @@
             <option value="1.9">毎日/肉体労働</option>
           </select>
         </div>
+      </div>
+
+      <!-- フィットネス/オンオフ -->
+      <div class="pair">
         <div>
           <label>フィットネス</label>
           <select id="fitnessType" disabled>
             <option value="" selected disabled>選択してください</option>
+            <option value="none">該当なし</option>
             <option value="strength">筋トレ</option>
             <option value="run">ランニング</option>
             <option value="cycle">サイクリング</option>
@@ -151,81 +219,17 @@
             <option value="anaerobic">その他（無酸素運動）</option>
           </select>
         </div>
-      </div>
-
-      <div class="pair">
         <div>
           <label>オン/オフ</label>
           <select id="onoff" disabled>
             <option value="" selected disabled>選択してください</option>
+            <option value="none">該当なし</option>
             <option value="on">運動日</option>
             <option value="off">休息日</option>
           </select>
         </div>
-        <div></div>
       </div>
-    </div>
 
-    <!-- お米 / パン / 根菜（計算前の回答） -->
-    <div style="margin-top:6px">
-      <label>お米を食べる量</label>
-      <div id="riceTabs" class="tab four" role="tablist" aria-label="お米を食べる量">
-        <button type="button" data-rice="0">茶碗0〜1杯</button>
-        <button type="button" data-rice="1">茶碗2〜3杯</button>
-        <button type="button" data-rice="2">茶碗4〜5杯</button>
-        <button type="button" data-rice="3">茶碗6杯以上</button>
-      </div>
-    </div>
-
-    <div style="margin-top:6px">
-      <label>パンを食べる量</label>
-      <div id="breadTabs" class="tab four" role="tablist" aria-label="パンを食べる量">
-        <button type="button" data-bread="0">0～1枚（個）</button>
-        <button type="button" data-bread="1">2～3枚（個）</button>
-        <button type="button" data-bread="2">4〜5枚（個）</button>
-        <button type="button" data-bread="3">6枚（個）以上</button>
-      </div>
-    </div>
-
-    <div style="margin-top:6px">
-      <label>根菜を食べる量</label>
-      <div id="rootTabs" class="tab four" role="tablist" aria-label="根菜を食べる量">
-        <button type="button" data-root="0">拳0～1個分</button>
-        <button type="button" data-root="1">拳2～3個分</button>
-        <button type="button" data-root="2">拳4〜5個分</button>
-        <button type="button" data-root="3">拳6個分以上</button>
-      </div>
-    </div>
-
-    <!-- n週目 -->
-    <div style="margin-top:10px">
-      <label>n週目</label>
-      <div class="weeksRow" id="weekTabs" role="tablist" aria-label="n週目">
-        <div class="half">
-          <button type="button" data-week="1">1週目</button>
-          <button type="button" data-week="2">2週目</button>
-          <button type="button" data-week="3">3週目</button>
-        </div>
-        <div class="half">
-          <button type="button" data-week="4">4週目</button>
-          <button type="button" data-week="5">5週目</button>
-          <button type="button" data-week="6">6週目</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- n日目（週選択後に出現） -->
-    <div id="daysBlock" style="margin-top:10px;display:none">
-      <label>n日目</label>
-      <div class="tab seven" id="dayTabs" role="tablist" aria-label="n日目">
-        <button type="button" data-day="1">1日目</button>
-        <button type="button" data-day="2">2日目</button>
-        <button type="button" data-day="3">3日目</button>
-        <button type="button" data-day="4">4日目</button>
-        <button type="button" data-day="5">5日目</button>
-        <button type="button" data-day="6">6日目</button>
-        <button type="button" data-day="7">7日目</button>
-      </div>
     </div>
 
     <div style="margin-top:12px">
@@ -319,14 +323,12 @@
 <script>
 const $ = id => document.getElementById(id);
 
-/* ユーティリティ */
+/* ===== Utils ===== */
 const clamp = (x, lo, hi) => Math.min(hi, Math.max(lo, x));
 const round5 = v => Math.round(v/5)*5;
-
-/* 内部タンパク質係数（UI非表示） */
 const AUTO_P_FACTOR = 1.6;
 
-/* ===== テーマ ===== */
+/* ===== Theme ===== */
 function applyThemeFromStorage(){
   const t = localStorage.getItem('theme');
   if(t === 'light'){ document.body.classList.add('light'); }
@@ -346,7 +348,7 @@ function updateThemeBtn(){
 $('themeToggle').addEventListener('click', toggleTheme);
 applyThemeFromStorage();
 
-/* ===== タブ切替 ===== */
+/* ===== Tabs show/hide ===== */
 ["tab-food","tab-chart"].forEach(id=>{
   $(id).addEventListener("click",(e)=>{
     ["tab-food","tab-chart"].forEach(i=>$(i).classList.remove('active'));
@@ -358,7 +360,7 @@ applyThemeFromStorage();
   });
 });
 
-/* ===== 運動習慣 → フィットネス/オンオフ有効化 ===== */
+/* ===== Habit → Fitness/OnOff ===== */
 ["habit","fitnessType","onoff"].forEach(id=>{
   $(id).addEventListener("change", ()=>{
     if(id==="habit") enforceHabitRules();
@@ -366,17 +368,37 @@ applyThemeFromStorage();
 });
 function enforceHabitRules(){
   const habit = $("habit").value;
-  const isNone = (habit==="1.2" || !habit);
-  $("fitnessType").disabled = isNone;
-  $("onoff").disabled = isNone;
-  if(isNone){ $("fitnessType").value = ""; $("onoff").value = ""; }
+  // 初期状態：未選択 → disabled + プレースホルダー表示
+  if(!habit){
+    setSelectState("fitnessType", true, "");
+    setSelectState("onoff",       true, "");
+    return;
+  }
+  // 「選択しない」→ 自動で該当なし
+  if(habit==="none"){
+    setSelectState("fitnessType", false, "none");
+    setSelectState("onoff",       false, "none");
+    return;
+  }
+  // それ以外 → 選択を促す
+  setSelectState("fitnessType", false, "");
+  setSelectState("onoff",       false, "");
+}
+function setSelectState(id, disabled, val){
+  const sel = $(id);
+  sel.disabled = disabled;
+  if(val==="" ){
+    sel.value = ""; // 「選択してください」
+  }else{
+    sel.value = val;
+  }
 }
 
-/* ===== 週・日タブ ===== */
-let planWeeks = 4;           // 自動で 4〜6 に調整
+/* ===== Week / Day ===== */
+let planWeeks = 4;     // 自動で 4〜6
 let selectedWeek = 1;
 let selectedDay = 1;
-let startCarb = 120;         // 回答から動的推定（最低100にクリップ）
+let startCarb = 120;   // 回答から推定
 
 $("weekTabs").addEventListener("click",(e)=>{
   const btn = e.target.closest("button[data-week]"); if(!btn) return;
@@ -384,9 +406,8 @@ $("weekTabs").addEventListener("click",(e)=>{
 });
 function setWeek(n){
   selectedWeek = n;
-  selectedWeek = Math.min(selectedWeek, planWeeks);
   document.querySelectorAll("#weekTabs button").forEach(b=>b.classList.toggle("active", +b.dataset.week===selectedWeek));
-  $("daysBlock").style.display = "block";
+  $("daysBlock").style.display = "grid"; // 週選択後に表示
   selectedDay = 1;
   renderDays();
   updateChartTitle();
@@ -395,84 +416,68 @@ function setWeek(n){
 }
 function renderDays(){
   const base = (selectedWeek-1)*7;
-  document.querySelectorAll("#dayTabs button").forEach((b,i)=>{
+  document.querySelectorAll("#daysBlock button").forEach((b,i)=>{
     const d = i+1;
     b.dataset.day = d;
     b.textContent = `${base+d}日目`;
     b.classList.toggle("active", d===selectedDay);
   });
 }
-$("dayTabs").addEventListener("click",(e)=>{
+$("daysBlock").addEventListener("click",(e)=>{
   const btn = e.target.closest("button[data-day]"); if(!btn) return;
   selectedDay = +btn.dataset.day;
-  document.querySelectorAll("#dayTabs button").forEach(b=>b.classList.toggle("active", +b.dataset.day===selectedDay));
+  document.querySelectorAll("#daysBlock button").forEach(b=>b.classList.toggle("active", +b.dataset.day===selectedDay));
   calc();
 });
 
-/* ===== お米/パン/根菜：回答保持 & 自動プラン決定 ===== */
-let riceLevel = null, breadLevel = null, rootLevel = null;
-function bindFourTabs(containerId, attr){
-  const el = $(containerId);
-  el.addEventListener('click', (e)=>{
-    const btn = e.target.closest('button'); if(!btn) return;
-    el.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    const val = +btn.dataset[attr];
-    if(attr==='rice') riceLevel = val;
-    if(attr==='bread') breadLevel = val;
-    if(attr==='root') rootLevel = val;
-    autoPlanFromAnswers();   // 回答に応じて 4〜6週間を自動決定
-  });
-}
-bindFourTabs('riceTabs','rice');
-bindFourTabs('breadTabs','bread');
-bindFourTabs('rootTabs','root');
-
-/* 回答→日常糖質量を推定（安全目安） */
-const CARB_PER_RICE_BOWL = 55; // 茶碗1杯(約150g)の炭水化物
-const CARB_PER_BREAD_UNIT = 25; // 食パン1枚/ロール1個想定
-const CARB_PER_ROOT_FIST = 12; // 根菜「拳1個」相当の糖質（約150g×8g/100g目安）
+/* ===== Answers (米/パン/根菜) → 自動プラン ===== */
+["riceSel","breadSel","rootSel"].forEach(id=>{
+  $(id).addEventListener("change", ()=>{ autoPlanFromAnswers(); });
+});
+const CARB_PER_RICE_BOWL = 55; // g/杯
+const CARB_PER_BREAD_UNIT = 25; // g/枚（個）
+const CARB_PER_ROOT_FIST = 12; // g/拳
 function estimateCarbsFromAnswers(){
-  const bowls = [0,0,0,0];       // デフォルト未選択は0扱い
-  const slices = [0,0,0,0];
-  const fists  = [0,0,0,0];
-  // 代表点（区間の中央値、6以上/未満は代表値）
-  bowls[0]=0.5; bowls[1]=2.5; bowls[2]=4.5; bowls[3]=6.5;
-  slices[0]=0.5; slices[1]=2.5; slices[2]=4.5; slices[3]=6;
-  fists[0]=0.5;  fists[1]=2.5;  fists[2]=4.5;  fists[3]=6;
+  const valOrNull = id => {
+    const v = $(id).value;
+    return (v===""||v==null)? null : +v;
+  };
+  const bowlsIdx  = valOrNull("riceSel");
+  const breadIdx  = valOrNull("breadSel");
+  const rootIdx   = valOrNull("rootSel");
 
-  const riceC  = (riceLevel==null)?0 : bowls[riceLevel]*CARB_PER_RICE_BOWL;
-  const breadC = (breadLevel==null)?0 : slices[breadLevel]*CARB_PER_BREAD_UNIT;
-  const rootC  = (rootLevel==null)?0 : fists[rootLevel]*CARB_PER_ROOT_FIST;
+  const bowls  = [0.5, 2.5, 4.5, 6.5];
+  const slices = [0.5, 2.5, 4.5, 5.5]; // 「5枚以上」に合わせ代表5.5
+  const fists  = [0.5, 2.5, 4.5, 6];
+
+  const riceC  = (bowlsIdx==null)?0 : bowls[bowlsIdx]*CARB_PER_RICE_BOWL;
+  const breadC = (breadIdx==null)?0 : slices[breadIdx]*CARB_PER_BREAD_UNIT;
+  const rootC  = (rootIdx==null)?0 : fists[rootIdx]*CARB_PER_ROOT_FIST;
+
   return riceC + breadC + rootC; // g/日
 }
-
-/* 推定糖質→プラン長(4/5/6週)とスタート糖質を自動設定 */
 function autoPlanFromAnswers(){
   const est = estimateCarbsFromAnswers(); // g/日
-  // スタート糖質：未選択でも最低120gから（上げすぎず、最終週100gへ安全に漸減）
   startCarb = Math.max(100, est || 120);
   startCarb = clamp(startCarb, 100, 360);
 
-  // プラン長：高糖質ほど長く
-  const weeksAuto =
-      (startCarb <= 180) ? 4 :
-      (startCarb <= 260) ? 5 : 6;
+  planWeeks =
+    (startCarb <= 180) ? 4 :
+    (startCarb <= 260) ? 5 : 6;
 
-  planWeeks = weeksAuto;
-  // 週ボタンの見た目も同期（手動選択は引き続き可能）
+  // チャートの週タブの見た目も同期
   document.querySelectorAll(".chartBtns button").forEach(b=>{
     b.classList.toggle("active", +b.dataset.weeks===planWeeks);
   });
-  selectedWeek = Math.min(selectedWeek, planWeeks);
+  if(selectedWeek>planWeeks){ selectedWeek = planWeeks; renderDays(); }
   updateChartTitle();
   if(window._lastDrawArgs) drawCarbChart(window._lastDrawArgs);
   calc();
 }
 
-/* 計算ボタン */
+/* ===== 計算ボタン ===== */
 $("calcBtn").addEventListener("click", ()=>{
-  if(requireFilled()){ autoPlanFromAnswers(); /* 自動反映してから計算 */ }
+  if(requireFilled()){ autoPlanFromAnswers(); }
   else{
     const pressed = $("calcBtn").getAttribute("aria-pressed")==="true";
     $("calcBtn").setAttribute("aria-pressed", pressed?"false":"true");
@@ -486,20 +491,20 @@ const SPORT_FACTORS = {
   none:{ on:1.00, off:1.00 }
 };
 function dailyAdjustment(habit, fitnessType, onoff){
-  if(!habit || habit==="1.2") return 1.00;
+  if(!habit || habit==="none" || habit==="1.2") return 1.00;
   const map = SPORT_FACTORS[fitnessType||"none"] || SPORT_FACTORS.none;
   const raw = map[onoff||"off"] ?? 1.00;
   return clamp(raw, 0.88, 1.12);
 }
 
-/* ===== 週次カーブ & 日次補間（動的スタート＋揺らぎ） ===== */
+/* ===== 週次カーブ（波形） & 日次補間 ===== */
 document.addEventListener('click',(e)=>{
   const btn = e.target.closest('.chartBtns button');
   if(btn){
     document.querySelectorAll('.chartBtns button').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     planWeeks = +btn.dataset.weeks;
-    selectedWeek = Math.min(selectedWeek, planWeeks);
+    if(selectedWeek>planWeeks){ selectedWeek = planWeeks; renderDays(); }
     updateChartTitle();
     if(window._lastDrawArgs) drawCarbChart(window._lastDrawArgs);
     calc();
@@ -510,17 +515,15 @@ function weekCarbBase(n, weeks){
   const t = (n-1)/(weeks-1);
   return startCarb - (startCarb-100)*t;
 }
-/* 緩やかな上下（見た目＆計算にも反映） */
 function weekCarbWavyTarget(n, weeks){
   if(n===weeks) return 100;
   const base = weekCarbBase(n, weeks);
   const next = weekCarbBase(Math.min(n+1,weeks), weeks);
-  const step = base - next; // 1週あたりの減少幅（正）
-  const amp = Math.max(4, Math.min(12, Math.abs(step)*0.35)); // 4〜12g
+  const step = base - next;
+  const amp = Math.max(4, Math.min(12, Math.abs(step)*0.35));
   const u = (n-1)/(weeks-1);
-  const taper = 0.6 - 0.4*Math.cos(Math.PI*u); // 0.2..1.0
-  const wobble = Math.sin(1.15*n + 0.6) * amp * taper * 0.5;
-  return round5(clamp(base + wobble, 100, startCarb));
+  const taper = 0.6 - 0.4*Math.cos(Math.PI*u);
+  return round5(clamp(base + Math.sin(1.15*n + 0.6)*amp*taper*0.5, 100, startCarb));
 }
 function dayCarbTarget(weeks, n, d){
   const base = weekCarbWavyTarget(n, weeks);
@@ -529,7 +532,7 @@ function dayCarbTarget(weeks, n, d){
   return round5(base + (next - base)*t);
 }
 
-/* 症状推定 */
+/* ===== 症状推定 & 電解質 ===== */
 function riskFlags({carb_g, fat_g, w, onoff, fitnessType, kcal, tdee}){
   const constipation = (carb_g < 20) || ((fat_g/w) < 0.7);
   const heavyDay = (onoff==="on") && ["run","cycle","aerobic","club","strength","anaerobic","martial"].includes(fitnessType);
@@ -537,11 +540,9 @@ function riskFlags({carb_g, fat_g, w, onoff, fitnessType, kcal, tdee}){
   const fatigue = (carb_g < 50 && heavyDay) || bigDeficit;
   return {constipation, fatigue};
 }
-
-/* 電解質（② 表示用） */
 function electrolyteSchedule({w, habit, fitnessType, onoff, constipation, fatigue}){
   let na = 3000, k = 3000, mg = 300; // mg
-  const mapAF = {"1.2":0, "1.375":400, "1.55":600, "1.725":800, "1.9":1000};
+  const mapAF = {"none":0, "1.2":0, "1.375":400, "1.55":600, "1.725":800, "1.9":1000};
   na += mapAF[habit]||0;
   if(onoff==="on"){
     if(["run","cycle","aerobic","club"].includes(fitnessType)) na += 600;
@@ -558,10 +559,10 @@ function electrolyteSchedule({w, habit, fitnessType, onoff, constipation, fatigu
   return { na_g:+(na/1000).toFixed(2), k_g:+(k/1000).toFixed(2), mg_mg:Math.round(mg), salt_g:+(na/1000*2.54).toFixed(1) };
 }
 
-/* 代表値（野菜・穀物=90kcal/100g） */
+/* ===== 代表値 ===== */
 const KCAL_PER_100G = { meat:280, fish:150, eggs:150, dairy:160, veg:90, fruit:60 };
 
-/* 食材配分 */
+/* 食材配分（動的） */
 function splits6By(carb_g, fitnessType, onoff){
   const level = (carb_g<=30)?30:(carb_g<=50)?50:70;
   let s = { meat:0.60, fish:0.11, eggs:0.11, dairy:0.08, veg:0.08, fruit:0.02 };
@@ -576,7 +577,7 @@ function splits6By(carb_g, fitnessType, onoff){
   return s;
 }
 
-/* ===== グラフ ===== */
+/* ===== Chart ===== */
 function fitCanvasDPR(canvas){
   const dpr = Math.max(1, window.devicePixelRatio||1);
   const rect = canvas.getBoundingClientRect();
@@ -601,23 +602,19 @@ function drawCarbChart({weeks}){
   const xTo=w=> padL + ((w-1)/(weeks-1))*plotW;
   const yTo=g=> padT + (1-(g-minY)/(maxY-minY))*plotH;
 
-  // グリッド
   ctx.strokeStyle=getComputedStyle(document.body).getPropertyValue('--grid').trim(); ctx.lineWidth=1;
   for(let i=0;i<=3;i++){ const gy=minY+(maxY-minY)/3*i, yy=yTo(gy); ctx.beginPath(); ctx.moveTo(padL,yy); ctx.lineTo(W-padR,yy); ctx.stroke(); }
   ctx.strokeStyle=getComputedStyle(document.body).getPropertyValue('--axisLine').trim(); ctx.lineWidth=1.5;
   ctx.beginPath(); ctx.moveTo(padL, yTo(minY)); ctx.lineTo(W-padR, yTo(minY)); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(padL, yTo(minY)); ctx.lineTo(padL, padT); ctx.stroke();
 
-  // 100gライン
   ctx.strokeStyle="#ff7575"; ctx.setLineDash([6,6]); ctx.beginPath(); ctx.moveTo(padL, yTo(100)); ctx.lineTo(W-padR, yTo(100)); ctx.stroke(); ctx.setLineDash([]);
 
-  // 軸ラベル
   ctx.fillStyle=getComputedStyle(document.body).getPropertyValue('--axis').trim();
   ctx.font=`${Math.round(W/60)+11}px system-ui`;
   for(let w=1; w<=weeks; w++){ const label=`${w}週`; const tw=ctx.measureText(label).width; const xx=xTo(w); const xSafe=Math.min(Math.max(xx-tw/2, padL), W-padR-tw); ctx.fillText(label, xSafe, H-16); }
   [minY, (minY+maxY)/2, maxY].forEach(val=>{ const label=`${Math.round(val)}g`; const tw=ctx.measureText(label).width; const yy=yTo(val); const yClamped=Math.min(Math.max(yy-4, padT+14), H-padB-8); ctx.fillText(label, Math.max(padL-tw-10,6), yClamped); });
 
-  // スプライン曲線
   ctx.save(); ctx.beginPath(); ctx.rect(padL, padT, plotW, plotH); ctx.clip();
   const pts = xs.map((w,i)=>({x:xTo(w), y:yTo(ys[i])}));
   function drawSpline(points){
@@ -640,12 +637,10 @@ function drawCarbChart({weeks}){
   }
   drawSpline(pts);
 
-  // 点
   ctx.fillStyle="#48d1b5";
   xs.forEach((w,i)=>{ const xx=xTo(w), yy=yTo(ys[i]); ctx.beginPath(); ctx.arc(xx,yy,(w===selectedWeek?4:2.5),0,Math.PI*2); ctx.fill(); });
   ctx.restore();
 
-  // クリックで週選択（ガイダンス文は削除済み）
   cvs.onclick = (ev)=>{
     const rect=cvs.getBoundingClientRect();
     const x = (ev.clientX-rect.left)/(rect.width)*(W);
@@ -657,7 +652,7 @@ function drawCarbChart({weeks}){
 }
 let _resizeId; window.addEventListener('resize', ()=>{ cancelAnimationFrame(_resizeId); _resizeId = requestAnimationFrame(()=>{ if(window._lastDrawArgs) drawCarbChart(window._lastDrawArgs); }); });
 
-/* 棒グラフ */
+/* ===== Bars ===== */
 function updateBars(pk, fk, ck, total){
   const p= total? Math.min(100, Math.round(pk/total*100)) : 0;
   const f= total? Math.min(100, Math.round(fk/total*100)) : 0;
@@ -672,7 +667,7 @@ function updateFoodBars(parts, total){
   });
 }
 
-/* 入力検証 */
+/* ===== Validation ===== */
 function requireFilled(){
   const miss=[];
   if(!$("sex").value) miss.push("性別");
@@ -684,7 +679,7 @@ function requireFilled(){
   return true;
 }
 
-/* 脂質下限ガード */
+/* ===== Fat floor ===== */
 function enforceFatFloor(protein_g, carb_g, fat_g, body_w){
   const FAT_MIN_G_PER_KG = 0.6;
   const fatMin = FAT_MIN_G_PER_KG * body_w;
@@ -710,35 +705,33 @@ function enforceFatFloor(protein_g, carb_g, fat_g, body_w){
   return {protein_g, carb_g, fat_g, adjusted:true, reason:"※脂質下限（0.6g/kg）を確保するため糖質→タンパク質の順で自動調整しました。"};
 }
 
-/* 計算 */
+/* ===== Main calc ===== */
 function calc(){
   const sex=$("sex").value;
   const age=parseFloat($("age").value)||0;
   const h=parseFloat($("height").value)||0;
   const w=parseFloat($("weight").value)||0;
-  const af=parseFloat($("habit").value)||1.2;
+  const habit=$("habit").value||"none";
 
-  // placeholder未選択は none 扱い
-  const fitnessVal = ($("habit").value && $("habit").value!=="1.2") ? $("fitnessType").value : "";
-  const onoffVal   = ($("habit").value && $("habit").value!=="1.2") ? $("onoff").value       : "";
-  const fitnessType = (fitnessVal||"none");
-  const onoff = (onoffVal||"none");
+  const fitnessType = ($("fitnessType").value||"none");
+  const onoff = ($("onoff").value||"none");
 
   const pFactor = AUTO_P_FACTOR;
 
   // 代謝
   const bmi = w / Math.pow(h/100,2);
   const bmr = (sex==="M") ? (10*w + 6.25*h - 5*age + 5) : (10*w + 6.25*h - 5*age - 161);
-  const dayF = dailyAdjustment($("habit").value, fitnessType, onoff);
+  const dayF = dailyAdjustment(habit, fitnessType, onoff);
+  const af = (habit==="none") ? 1.2 : parseFloat(habit)||1.2;
   const tdee = bmr * af * dayF;
 
   // 目標＝TDEE
   const targetKcal = tdee;
 
-  // 週・日ベースの糖質（動的スタート＋揺らぎ）
+  // 週・日ベースの糖質
   const carb_day = dayCarbTarget(planWeeks, selectedWeek, selectedDay||1);
 
-  // マクロ（P固定、脂質で帳尻）
+  // マクロ
   let protein_g=w*pFactor, carb_g=carb_day;
   let fat_g=(targetKcal - 4*protein_g - 4*carb_g)/9;
 
@@ -759,9 +752,9 @@ function calc(){
 
   // 症状推定→電解質（日割り）
   const risks = riskFlags({carb_g, fat_g, w, onoff, fitnessType, kcal, tdee});
-  const elec = electrolyteSchedule({w, habit:$("habit").value, fitnessType, onoff, constipation:risks.constipation, fatigue:risks.fatigue});
+  const elec = electrolyteSchedule({w, habit, fitnessType, onoff, constipation:risks.constipation, fatigue:risks.fatigue});
 
-  // 表示（③ ラベル：TRANSITION DIET）
+  // 表示
   $("bmi").textContent=bmi.toFixed(2);
   $("bmr").textContent=Math.round(bmr).toLocaleString();
   $("tdee").textContent=Math.round(tdee).toLocaleString();
@@ -778,7 +771,6 @@ function calc(){
   const fitnessLabelMap={none:"該当なし",strength:"筋トレ",run:"ランニング",cycle:"サイクリング",club:"部活動",martial:"格闘技",aerobic:"その他（有酸素運動）",anaerobic:"その他（無酸素運動）"};
   const onoffTxt = (onoff==="none")?"該当なし":(onoff==="on"?"運動日":"休息日");
 
-  // ② 電解質の目安量を明示
   $("macroNote").textContent =
     `フィットネス：${fitnessLabelMap[fitnessType]}｜オン/オフ：${onoffTxt}｜糖質摂取量（目安）：${Math.round(carb_g)}g｜活動係数AF×日別補正＝TDEE｜日別補正±12%内｜電解質（Na/K/Mg）：${elec.na_g}g（塩${elec.salt_g}g） / ${elec.k_g}g / ${elec.mg_mg}mg`;
 
@@ -788,8 +780,9 @@ function calc(){
   $("macroCard").style.display="block";
   $("mixCard").style.display="block";
 
-  /* 食材配分（糖質kcalは 植物側：野菜・穀物6 / 果物4） */
+  /* 食材配分：植物側は糖質kcalを 野菜・穀物6 : 果物4 に */
   const sp = splits6By(carb_g, fitnessType, onoff);
+  const ck = carb_g*4;
   const kVeg   = ck * 0.60;
   const kFruit = ck * 0.40;
 
@@ -821,11 +814,10 @@ function calc(){
   updateChartTitle();
   drawCarbChart({weeks:planWeeks});
 
-  // 計画値保持（バグ修正：正しいキーで保持）
   window._plan = { protein_g, fat_g, carb_g, kcal, tdee, body_w:w, risks };
 }
 
-/* 修正案 */
+/* ===== 修正案 ===== */
 $("fixBtn").addEventListener("click", ()=>{
   if(!window._plan){ alert("まずは上の「計算」を押してください。"); return; }
   const actK = parseFloat($("actK").value||"0");
@@ -852,7 +844,7 @@ $("fixBtn").addEventListener("click", ()=>{
   $("fixSuggest").innerHTML = lines.length ? lines.map(s=>`<div>・${s}</div>`).join("") : "入力された実績に対する修正は特に必要ありません。";
 });
 
-/* BMI区分 */
+/* ===== Misc ===== */
 function classText(bmi){
   if(bmi < 18.5) return "低体重(<18.5)";
   if(bmi < 25)   return "普通(18.5–24.9)";
@@ -862,9 +854,9 @@ function classText(bmi){
   return "肥満III(≥40)";
 }
 
-/* 初期化 */
+/* ===== Init ===== */
 function restoreFormFresh(){
-  ["sex","age","height","weight","habit","fitnessType","onoff"].forEach(id=>{
+  ["sex","age","height","weight","habit","fitnessType","onoff","riceSel","breadSel","rootSel"].forEach(id=>{
     const el = $(id); if(!el) return;
     if(el.tagName==="SELECT"){ el.selectedIndex = 0; }
     else el.value = "";
@@ -875,7 +867,6 @@ function restoreFormFresh(){
   planWeeks = 4; selectedWeek = 1; selectedDay = 1; startCarb = 120; updateChartTitle();
   document.querySelectorAll("#weekTabs button").forEach(b=>b.classList.remove("active"));
   $("daysBlock").style.display = "none";
-  renderDays();
 }
 restoreFormFresh();
 </script>
