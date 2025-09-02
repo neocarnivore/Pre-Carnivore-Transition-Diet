@@ -457,7 +457,7 @@ function requireFilled(){
   return true;
 }
 
-/* 脂質下限（0.6g/kg） */
+/* 脂質下限（0.6g/kg）—今回は比率で十分満たすため未使用だが残置 */
 function enforceFatFloor(protein_g, carb_g, fat_g, body_w){
   const FAT_MIN_G_PER_KG = 0.6;
   const fatMin = FAT_MIN_G_PER_KG * body_w;
@@ -595,7 +595,6 @@ function generateCarbPlan(currentCarb, weeks, habit, fitnessType, stepPerDay){
   const rounded = arr.map(v=>Math.round(v));
   const deltaEnd = rounded[rounded.length-1] - target;
   if(deltaEnd !== 0){
-    // 末尾近くの2〜3点に分散して微修正し急激に見えないように
     for(let i=rounded.length-3;i<rounded.length;i++){
       if(i<=0) continue;
       if(deltaEnd>0) rounded[i] = Math.max(target, rounded[i]-1);
@@ -638,7 +637,6 @@ function drawCarbChart({series, weekIndex}){
   const start = weekIndex*weekLen;
   const seg = series.slice(start, start+weekLen);
 
-  // 余白を少し広めにしてラベル切れ防止
   const padL=68, padR=28, padT=28, padB=62;
   const minY = 100;
   const maxY = Math.max(...seg)+10;
@@ -661,7 +659,7 @@ function drawCarbChart({series, weekIndex}){
   ctx.beginPath(); ctx.moveTo(padL, yTo(minY)); ctx.lineTo(W-padR, yTo(minY)); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(padL, yTo(minY)); ctx.lineTo(padL, padT); ctx.stroke();
 
-  // Xラベル（均一間隔・端で切れないようクランプ）
+  // Xラベル
   ctx.fillStyle=getComputedStyle(document.body).getPropertyValue('--axis').trim();
   ctx.font=`${Math.round(W/60)+10}px system-ui`;
   ctx.textAlign = 'center';
@@ -674,10 +672,10 @@ function drawCarbChart({series, weekIndex}){
     const tw=ctx.measureText(label).width;
     const xSafe = clamp(xx, padL + tw/2, W - padR - tw/2);
     ticksX.push(xSafe);
-    ctx.fillText(label, xSafe, H-22); // 「日」まで見切れない
+    ctx.fillText(label, xSafe, H-22);
   }
 
-  // Yラベル（中線に合わせて上下切れ防止）
+  // Yラベル
   ctx.textAlign = 'right';
   ctx.textBaseline = 'middle';
   for(let i=0;i<=3;i++){
@@ -702,7 +700,7 @@ function drawCarbChart({series, weekIndex}){
   pts.forEach(p=>{ ctx.beginPath(); ctx.arc(p.x,p.y,2.5,0,Math.PI*2); ctx.fill(); });
   ctx.restore();
 
-  // 吹き出し基準Y（軸上少し上）
+  // 吹き出し基準Y
   const uniformY = yTo(minY) - 12;
   window._lastChartArgs = {series, weekIndex, pts, ticksX, uniformY, W, H, padL, padR};
 }
@@ -730,7 +728,7 @@ if(!window._weekBtnBound){
   window._weekBtnBound = true;
 }
 
-/* ツールチップ：小さめ＆画面外に出さない（左右＆上方向をクランプ） */
+/* ツールチップ */
 (function bindTip(){
   const cvs = $("wtChart");
   const tip = $("chartTip");
@@ -748,7 +746,7 @@ if(!window._weekBtnBound){
     const val = a.series[a.weekIndex*7 + best];
 
     tip.textContent = `${dayIndexGlobal}日目：${val}g`;
-    tip.style.display = "block"; // サイズ計測
+    tip.style.display = "block";
     const tipW = tip.offsetWidth || 80;
     const tipH = tip.offsetHeight || 26;
 
@@ -757,7 +755,7 @@ if(!window._weekBtnBound){
     tip.style.left = (leftPx / cvs.width * 100) + "%";
 
     const yBase = a.uniformY;
-    const yPx = Math.max(tipH/2 + pad, yBase - 2*tipH); // 2個分上
+    const yPx = Math.max(tipH/2 + pad, yBase - 2*tipH);
     tip.style.top  = (yPx / cvs.height * 100) + "%";
   });
   document.addEventListener("click",(e)=>{
@@ -778,13 +776,13 @@ function calc(){
   const af=parseFloat($("habit").value)||1.2;
   const fitnessType = ($("habit").value==="1.2") ? "none" : $("fitnessType").value;
 
-  // 代謝
+  // 代謝（体重維持ベースの参照値として表示は継続）
   const bmi = w / Math.pow(h/100,2);
   const bmr = (sex==="M") ? (10*w + 6.25*h - 5*age + 5) : (10*w + 6.25*h - 5*age - 161);
   const dayF = dailyAdjustment($("habit").value, fitnessType);
   const tdee = bmr * af * dayF;
 
-  // 現在糖質（②③の表示仕様）
+  // 現在糖質（表示仕様そのまま）
   const curCarb = currentCarbValue(sex);
   const selVal = $("curCarbSel").value;
   const isEstimated = (selVal==="unknown");
@@ -794,40 +792,36 @@ function calc(){
   const weeks = ws.weeks; const stepPerDay = ws.step;
   const series = generateCarbPlan(curCarb, weeks, $("habit").value, fitnessType, stepPerDay);
 
-  // マクロ（目標糖質100g）
-  const PF_DEFAULT = 1.6;
-  let carb_g = 100;
-  let protein_g = w*PF_DEFAULT;
-  let fat_g=(tdee - 4*protein_g - 4*carb_g)/9;
+  /* ==== ここから内部マクロ計算だけ差し替え ==== 
+     仕様：P=1.88 g/kg 固定、C=100 g固定、F:Pkcal=3:1 → Fkcal=3×Pkcal、F(g)=Fkcal/9
+     TDEEには合わせない（表示のみ） */
+  const PF_FIXED = 1.88;
+  const carb_g = 100;
+  let protein_g = w * PF_FIXED;
 
-  let pk=protein_g*4, ck=carb_g*4, fk, kcal;
-  let warnMsg = "";
-  if(fat_g<0){
-    const pcK=pk+ck, s=Math.max(0,tdee/(pcK||1));
-    protein_g*=s; carb_g*=s; fat_g=0; pk=protein_g*4; ck=carb_g*4; fk=0; kcal=tdee;
-    warnMsg = "※脂質が負になったため、TDEEを優先し、タンパク質/糖質を自動調整しました（脂質=0）。";
-  }else{
-    const adj = enforceFatFloor(protein_g, carb_g, fat_g, w);
-    protein_g = adj.protein_g; carb_g = adj.carb_g; fat_g = adj.fat_g;
-    pk = protein_g*4; ck = carb_g*4; fk = fat_g*9; kcal = pk+ck+fk;
-    if(adj.adjusted) warnMsg = adj.reason;
-  }
-  if(!kcal){ fk=fat_g*9; kcal=pk+ck+fk; }
+  let pk = protein_g * 4;       // Protein kcal
+  let ck = carb_g   * 4;        // Carb kcal
+  let fk = pk * 3;              // Fat kcal = 3 × Protein kcal
+  let fat_g = fk / 9;           // Fat grams
+  let kcal = pk + ck + fk;
+  let warnMsg = "";             // 警告表示は使わない
+  /* ==== 差し替えここまで ==== */
 
   // 表示（基礎）
   $("bmi").textContent=bmi.toFixed(2);
   $("bmr").textContent=Math.round(bmr).toLocaleString();
   $("tdee").textContent=Math.round(tdee).toLocaleString();
+  // UIテキストは変更しない（表示のみ元仕様のまま）
   $("bmiClassTxt").textContent=`BMI区分：${classText(bmi)}｜タンパク質 1.6g/kg｜日別補正 ×${dayF.toFixed(2)}（±12%内）`;
 
-  // プランカード：「現在の糖質量〇〇g/日（推定/目安）」形式
+  // プランカード
   $("curCarbLabel").textContent = "現在の糖質量";
   $("curCarbShow").textContent = curCarb.toLocaleString();
   $("curCarbUnit").textContent = unitText;
   $("weeksNum").textContent = weeks;
   $("nowGoalCard").style.display="block";
 
-  // マクロ
+  // マクロ表示
   $("kcal").textContent=Math.round(kcal).toLocaleString();
   $("p").textContent=Math.round(protein_g);
   $("f").textContent=Math.round(fat_g);
@@ -843,14 +837,14 @@ function calc(){
   $("na").textContent = elec.na.toLocaleString();
   $("mg").textContent = elec.mg.toLocaleString();
 
-  // 注記
+  // 注記（そのまま）
   const habitLabel = {"1.2":"ほぼ運動しない","1.375":"週1〜2日","1.55":"週3〜4日","1.725":"週5〜6日","1.9":"毎日/肉体労働"}[$("habit").value] || "—";
   const fitnessLabelMap={none:"該当なし",strength:"筋トレ",run:"ランニング",cycle:"サイクリング",club:"部活動",martial:"格闘技",aerobic:"その他（有酸素運動）",anaerobic:"その他（無酸素運動）"};
   $("macroNote").textContent =
     `運動習慣：${habitLabel}｜フィットネス：${fitnessLabelMap[fitnessType]||"—"}｜` +
     `Na：4000mg+糖質≤130g→+600mg+AF補正→+300mg｜K：3500mg+AF補正→+k｜Mg：400mg+AF≥1.55→+50mg`;
 
-  // 食材配分
+  // 食材配分（kcalに基づく）
   const parts = computeFoodDistribution(kcal, fitnessType);
   $("kMeat").textContent  = Math.round(parts.kMeat);
   $("kFish").textContent  = Math.round(parts.kFish);
