@@ -319,7 +319,7 @@
 
     <section id="chartSection" class="section" style="display:none">
       <h3>糖質量推移</h3>
-      <div class="kpi chartCard" style="border:none;background:透明;box-shadow:none">
+      <div class="kpi chartCard" style="border:none;background:transparent;box-shadow:none">
         <div class="chartHeader">
           <div class="small" id="chartTitle" style="font-weight:700">期間</div>
           <div class="chartBtns" id="weekBtns" role="tablist" aria-label="期間（週）">
@@ -402,7 +402,7 @@ function setNoneOptionVisible(selectId, visible){
   if(!opt) return;
   opt.hidden = !visible;
   opt.disabled = !visible;
-  if(!visible && sel.value==="none"){ sel.value = ""; }
+  if(!visible && sel.value==="none"){ sel.value=""; }
 }
 function enforceHabitRules(){
   const habit = $("habit").value;
@@ -923,6 +923,14 @@ function selectDay(dayGlobalIndex, silent){
   let fat_g = (tdee - 4*protein_g - 4*carb_g)/9;
   if(fat_g < 0) fat_g = 0;
 
+  // ★ 初期2週間はタンパク質優位→脂質を漸増（1日目≈55% → 14日目=100%）
+  const rampDays = Math.min(14, series.length);
+  if(rampDays >= 1 && d < rampDays){
+    const alpha = (rampDays > 1) ? (d/(rampDays-1)) : 1;
+    const fatScale = 0.55 + 0.45*alpha;
+    fat_g *= fatScale;
+  }
+
   // 脂質下限を満たすため加算（糖質/タンパク質は維持）— 表記は出さない
   let adj = enforceFatFloor(protein_g, carb_g, fat_g, w);
   protein_g = adj.protein_g; carb_g = adj.carb_g; fat_g = adj.fat_g;
@@ -949,7 +957,7 @@ function selectDay(dayGlobalIndex, silent){
   $("na").textContent = elec.na.toLocaleString();
   $("mg").textContent = elec.mg.toLocaleString();
 
-  // ③ 文言更新（句点なし）— ★ここを「推定値」に変更
+  // ③ 文言更新（句点なし）※推定→推定値 に変更
   const habitLabel = {"1.2":"ほぼ運動しない","1.375":"週1〜2日","1.55":"週3〜4日","1.725":"週5〜6日","1.9":"毎日/肉体労働"}[$("habit").value] || "—";
   const fitnessLabelMap={none:"該当なし",strength:"筋トレ",run:"ランニング",cycle:"サイクリング",club:"部活動",martial:"格闘技",aerobic:"その他（有酸素運動）",anaerobic:"その他（無酸素運動）"};
   $("macroNote").textContent =
