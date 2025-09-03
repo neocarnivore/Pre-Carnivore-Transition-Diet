@@ -549,8 +549,7 @@ function computeFoodDistribution(kcalTotal, fitnessType, carb_g){
   if(["run","cycle","aerobic","club"].includes(fitnessType)){ sp.fish+=0.02; sp.meat-=0.02; }
   else if(["strength","anaerobic","martial"].includes(fitnessType)){ sp.meat+=0.03; sp.eggs+=0.02; sp.dairy-=0.05; }
 
-  const sumA = sp.meat+sp.fish+sp.eggs+dairy=sp.dairy; // keep ratio sum stable
-  for(const k in sp) sp[k]/=sumA;
+  const sumA = sp.meat+sp.fish+sp.eggs+sp.dairy; for(const k in sp) sp[k]/=sumA;
 
   const kMeat  = remain * sp.meat;
   const kFish  = remain * sp.fish;
