@@ -81,7 +81,7 @@
   }
 
   .footerNote{color:#000 !important}
-  .light .footerNote{color:#000 !important}
+  .light .footerNote{color:#000 !重要}
   .footerNote a{color:var(--p);text-decoration:underline}
 
   /* 日程選択（美観アップ） */
@@ -92,7 +92,7 @@
   #dayList .btnGrid{grid-template-columns:repeat(7,minmax(0,1fr))}
   .segTitle{font-size:12px;color:var(--muted);letter-spacing:.02em;margin:2px 0 8px}
   .segBtn{
-    background:transparent;border:1px solid var(--border);color:var(--text);
+    background:透明;border:1px solid var(--border);color:var(--text);
     padding:10px 12px;border-radius:12px;cursor:pointer;transition:.15s transform,.15s box-shadow
   }
   .segBtn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(0,0,0,.18)}
@@ -487,15 +487,6 @@ function requireFilled(){
   }
   if(miss.length){ alert("未入力があります：\n・"+miss.join("\n・")); return false; }
   return true;
-}
-
-/* 脂質下限（0.6g/kg）— 総kcalは下限分だけ増加（糖質は保持） */
-function enforceFatFloor(protein_g, carb_g, fat_g, body_w){
-  const FAT_MIN_G_PER_KG = 0.6;
-  const fatMin = FAT_MIN_G_PER_KG * body_w;
-  if(fat_g >= fatMin) return {protein_g, carb_g, fat_g, adjusted:false, reason:""};
-  fat_g = fatMin;
-  return {protein_g, carb_g, fat_g, adjusted:true, reason:"※脂質下限（0.6 g/kg）を満たすため脂質を追加しました（総kcalはその分増加）。"};
 }
 
 /* 電解質：活動量/糖質量ベース（高糖質ではNa/Kやや控えめ） */
@@ -929,10 +920,6 @@ function selectDay(dayGlobalIndex, silent){
 
   let fat_g = fatBase * rampF + wiggleFat;
   if(fat_g < 0) fat_g = 0;
-
-  // 脂質下限を満たすための調整（表記は出さない）
-  let adj = enforceFatFloor(protein_g, carb_g, fat_g, w);
-  protein_g = adj.protein_g; carb_g = adj.carb_g; fat_g = adj.fat_g;
 
   // kcal計算（TDEEに一致させない）
   const pk = protein_g*4, ck = carb_g*4, fk = fat_g*9;
