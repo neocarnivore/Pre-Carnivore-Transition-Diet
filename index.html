@@ -73,7 +73,6 @@
   .chartBtns button.active{background:var(--acc);color:#fff;border-color:transparent}
   canvas{width:min(820px,100%);height:auto;display:block;border-radius:10px;margin:0 auto}
 
-  /* Tooltip */
   .tip{
     position:absolute;padding:6px 8px;border-radius:8px;
     background:var(--acc);color:#fff;border:none;
@@ -256,7 +255,7 @@
     </div>
   </div>
 
-  <!-- 日程選択（NEW・美観強化） -->
+  <!-- 日程選択（初期から両側表示） -->
   <div class="card" id="scheduleCard" style="display:none" aria-live="polite">
     <h3>日程選択</h3>
     <div class="scheduleGrid">
@@ -266,7 +265,7 @@
       </div>
       <div>
         <div class="segTitle">n日目</div>
-        <div id="dayList" style="display:none">
+        <div id="dayList" style="display:block">
           <div id="dayBtns" class="btnGrid"><!-- 動的 --></div>
         </div>
       </div>
@@ -499,7 +498,7 @@ function enforceFatFloor(protein_g, carb_g, fat_g, body_w){
   return {protein_g, carb_g, fat_g, adjusted:true, reason:"※脂質下限（0.6 g/kg）を満たすため脂質を追加しました（総kcalはその分増加）。"};
 }
 
-/* 電解質：活動量/糖質量ベースにリチューン（高糖質ではNa/Kやや控えめ） */
+/* 電解質：活動量/糖質量ベース（高糖質ではNa/Kやや控えめ） */
 function estimateElectrolytes(habit, fitnessType, currentCarb, w, age){
   const af = parseFloat(habit)||1.2;
   const scaleAF = clamp((af - 1.2) / (1.9 - 1.2), 0, 1);
@@ -507,10 +506,9 @@ function estimateElectrolytes(habit, fitnessType, currentCarb, w, age){
   const isPower  = ["strength","anaerobic","martial"].includes(fitnessType);
 
   // Na
-  let na = 3600; // ベースを少し低め
+  let na = 3600;
   if(currentCarb <= 130) na += 600;
   if(currentCarb >= 250){
-    // 250〜349で -300、350以上で -500（上限）
     na -= (currentCarb >= 350) ? 500 : 300;
   }
   na += Math.round(240 * scaleAF);
@@ -518,7 +516,7 @@ function estimateElectrolytes(habit, fitnessType, currentCarb, w, age){
   na += Math.round(clamp(w - 60, -20, 40) * 2);
 
   // K
-  let k = 3200; // ベースを少し低め
+  let k = 3200;
   k += Math.round(180 * scaleAF);
   k += isCardio ? 80 : isPower ? 50 : 0;
   k += Math.round((w - 60) * 8);
@@ -526,7 +524,7 @@ function estimateElectrolytes(habit, fitnessType, currentCarb, w, age){
   if(currentCarb <= 130) k += 150;
   if(currentCarb >= 250) k -= 150;
 
-  // Mg（据え置き微調整）
+  // Mg
   let mg = 400;
   if(af >= 1.55) mg += 40;
   mg += Math.round(16 * scaleAF);
@@ -569,6 +567,8 @@ function trainingDaysPerWeek(habit){
   if(habit==="1.375") return 2;
   return 0;
 }
+
+/* 期間・一日あたりの落差候補（目安） */
 function chooseWeeksAndStep(diff, sex, age, habit, fitnessType){
   const daysW = trainingDaysPerWeek(habit);
   let step = diff > 0 ? diff/28 : 10; // おおよそ4週
@@ -582,42 +582,39 @@ function chooseWeeksAndStep(diff, sex, age, habit, fitnessType){
   weeks = clamp(weeks, 3, 5);
   return {weeks, step};
 }
+
+/* 糖質量の系列生成（±2gの自然な揺らぎを許容） */
 function generateCarbPlan(currentCarb, weeks, habit, fitnessType, stepPerDay){
   const days = Math.max(2, weeks*7);
   const target = 100;
   const diff = currentCarb - target;
 
+  // 線形トレンド
   const base = Array.from({length:days}, (_,d)=> currentCarb - diff * (d/(days-1)));
 
   const arr = [];
   for(let d=0; d<days; d++){
     const t = d/(days-1);
-    const lastWeekStart = (weeks-1)*7/(days-1);
-    const fadeLast = t>lastWeekStart ? Math.pow(1 - (t-lastWeekStart)/(1-lastWeekStart), 2) : 1;
-    const amp = 2.2 * (1 - t) * fadeLast;
-    const wiggle = Math.sin(d*0.85)*0.55 + Math.cos(d*0.31)*0.35;
+    // 初期は揺らぎやや大きめ→終盤で収束
+    const amp = 1.6 * (1 - t);
+    const wiggle = Math.sin(d*0.85)*0.9 + Math.cos(d*0.31)*0.6; // -1.5〜+1.5程度
     let v = base[d] + amp * wiggle;
+
     v = clamp(v, target, Math.max(currentCarb, 140));
+    if(d>0){
+      // 前日からの上昇は+2gまで許容
+      if(v > arr[d-1] + 2) v = arr[d-1] + 2;
+      // 一日の落差が急すぎる場合は緩和
+      const idealDrop = diff/(days-1);
+      const maxDrop = Math.max(idealDrop*1.35, 3.2);
+      const dropNow = arr[d-1] - v;
+      if(dropNow > maxDrop) v = arr[d-1] - maxDrop;
+    }
     arr.push(v);
   }
-  for(let d=1; d<days; d++){
-    if(arr[d] > arr[d-1]) arr[d] = arr[d-1];
-    const idealDrop = diff/(days-1);
-    const prevDrop = arr[d-1] - arr[d];
-    const maxDelta = Math.max(idealDrop*1.35, 3.2);
-    const minDelta = Math.min(idealDrop*0.65, maxDelta);
-    const clipped = clamp(prevDrop, minDelta, maxDelta);
-    arr[d] = arr[d-1] - clipped;
-  }
+
   const rounded = arr.map(v=>Math.round(v));
-  const deltaEnd = rounded[rounded.length-1] - target;
-  if(deltaEnd !== 0){
-    for(let i=rounded.length-3;i<rounded.length;i++){
-      if(i<=0) continue;
-      if(deltaEnd>0) rounded[i] = Math.max(target, rounded[i]-1);
-      else           rounded[i] = Math.min(rounded[i-1], rounded[i]+1);
-    }
-  }
+  // 終点を厳密に100gに調整
   rounded[rounded.length-1] = target;
   return rounded;
 }
@@ -789,12 +786,12 @@ function buildScheduleWeeks(weeks){
       document.querySelectorAll('#weekList .segBtn').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
       buildScheduleDays(i);
-      $("dayList").style.display = "block"; // 週選択後に出現
+      $("dayList").style.display = "block";
       setChartWeek(i);
-      // デフォルト：その週の1日目を適用
       const dayGlobal = i*7;
       selectDay(dayGlobal);
     });
+    if(i===0) btn.classList.add('active'); // 初期選択
     box.appendChild(btn);
   }
 }
@@ -813,6 +810,7 @@ function buildScheduleDays(weekIdx){
       btn.classList.add('active');
       selectDay(d-1);
     });
+    if(d===1) btn.classList.add('active'); // 初期選択
     daysBox.appendChild(btn);
   }
 }
@@ -881,10 +879,11 @@ function calc(){
   $("nowGoalCard").style.display="block";
   $("repValuesNote").style.display = isEstimated ? "block" : "none";
 
-  // 日程選択カード
+  // 日程選択カード（初期からn日目も表示）
   buildScheduleWeeks(weeks);
+  buildScheduleDays(0);
   $("scheduleCard").style.display="block";
-  $("dayList").style.display="none"; // 週選択前はn日目を出さない
+  $("dayList").style.display="block";
 
   // チャート
   buildWeekButtons(weeks);
@@ -899,7 +898,7 @@ function calc(){
   $("mixCard").style.display="block";
 }
 
-/* 日別適用：糖質は系列値をそのまま、脂質は下限確保のため加算可、TDEEには一致させない */
+/* 日別適用：糖質は系列値。脂質は下限確保分は内部加算（表記なし）。TDEEには一致させない */
 function selectDay(dayGlobalIndex, silent){
   if(!window._series || !window._ctxMeta) return;
   const series = window._series;
@@ -911,16 +910,20 @@ function selectDay(dayGlobalIndex, silent){
   // その日の糖質（系列）
   let carb_g = series[d];
 
-  // たんぱく質を1.50→1.80 g/kgで日数に応じて増やす
+  // たんぱく質：1.50→1.80 g/kgで日数に応じて増やす（1日目は日本人平均71.4gを考慮）
   const t = series.length>1 ? d/(series.length-1) : 1;
   const P_LOW = 1.50, P_HIGH = 1.80;
   let protein_g = w * (P_LOW + (P_HIGH - P_LOW)*t);
+  if(d === 0){
+    // ① 日本人平均71.4gを考慮して初日に適用（上限として）
+    protein_g = Math.min(protein_g, 71.4);
+  }
 
   // 脂質：まずTDEEからの残差で初期推定（負なら0にクリップ）
   let fat_g = (tdee - 4*protein_g - 4*carb_g)/9;
   if(fat_g < 0) fat_g = 0;
 
-  // 脂質下限を満たすため加算（糖質/タンパク質は維持）
+  // 脂質下限を満たすため加算（糖質/タンパク質は維持）— 表記は出さない
   let adj = enforceFatFloor(protein_g, carb_g, fat_g, w);
   protein_g = adj.protein_g; carb_g = adj.carb_g; fat_g = adj.fat_g;
 
@@ -936,7 +939,9 @@ function selectDay(dayGlobalIndex, silent){
   $("pkcal").textContent=Math.round(pk).toLocaleString();
   $("fkcal").textContent=Math.round(fk).toLocaleString();
   $("ckcal").textContent=Math.round(ck).toLocaleString();
-  if(adj.adjusted){ $("fatWarn").textContent=adj.reason; $("fatWarn").style.display="block"; } else { $("fatWarn").style.display="none"; }
+
+  // ② 脂質下限の注意表記は不要（非表示固定）
+  $("fatWarn").style.display="none";
 
   // 電解質（活動量/糖質量ベース）
   const elec = estimateElectrolytes($("habit").value, fitnessType, carb_g, w, age);
@@ -944,14 +949,14 @@ function selectDay(dayGlobalIndex, silent){
   $("na").textContent = elec.na.toLocaleString();
   $("mg").textContent = elec.mg.toLocaleString();
 
-  // 注記（① 文言変更）
+  // ③ 文言更新（句点なし）
   const habitLabel = {"1.2":"ほぼ運動しない","1.375":"週1〜2日","1.55":"週3〜4日","1.725":"週5〜6日","1.9":"毎日/肉体労働"}[$("habit").value] || "—";
   const fitnessLabelMap={none:"該当なし",strength:"筋トレ",run:"ランニング",cycle:"サイクリング",club:"部活動",martial:"格闘技",aerobic:"その他（有酸素運動）",anaerobic:"その他（無酸素運動）"};
   $("macroNote").textContent =
     `選択日：${d+1}日目｜運動習慣：${habitLabel}｜フィットネス：${fitnessLabelMap[fitnessType]||"—"}｜` +
-    `Na/K/Mgは活動量/糖質量に基づく推定。`;
+    `Na/K/Mgは活動量/糖質量に基づく推定`;
 
-  // 食材配分（③：日数に応じて変動。植物=糖質kcal、残り=動物性を配分）
+  // 食材配分（④/⑤：各日で変動）
   const parts = computeFoodDistribution(kcal, fitnessType, carb_g);
   $("kMeat").textContent  = Math.round(parts.kMeat);
   $("kFish").textContent  = Math.round(parts.kFish);
