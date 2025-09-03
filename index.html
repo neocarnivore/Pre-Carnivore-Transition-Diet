@@ -307,13 +307,13 @@
       <div class="row6">
         <div class="kpi"><span class="small">肉</span><b id="gMeat">–</b><span class="small">g</span><div class="small">≈ <b id="kMeat">–</b> kcal</div><div class="bar p"><span id="meatbar"></span></div></div>
         <div class="kpi"><span class="small">魚介類</span><b id="gFish">–</b><span class="small">g</span><div class="small">≈ <b id="kFish">–</b> kcal</div><div class="bar p"><span id="fishbar"></span></div></div>
-        <div class="kpi"><span class="small">卵</span><b id="gEggs">–</b><span class="small">g</span><div class="small">≈ <b id="kEggs">–</b> kcal</div><div class="bar f"><span id="eggsbar"></span></div></div>
-        <div class="kpi"><span class="small">乳製品</span><b id="gDairy">–</b><span class="small">g</span><div class="small">≈ <b id="kDairy">–</b> kcal</div><div class="bar f"><span id="dairybar"></span></div></div>
-        <div class="kpi"><span class="small">穀物・根菜</span><b id="gGroot">–</b><span class="small">g</span><div class="small">≈ <b id="kGroot">–</b> kcal</div><div class="bar c"><span id="grootbar"></span></div></div>
+        <div class="kpi"><span class="small">卵・乳製品</span><b id="gEggDairy">–</b><span class="small">g</span><div class="small">≈ <b id="kEggDairy">–</b> kcal</div><div class="bar f"><span id="eggDairybar"></span></div></div>
+        <div class="kpi"><span class="small">根菜</span><b id="gRoot">–</b><span class="small">g</span><div class="small">≈ <b id="kRoot">–</b> kcal</div><div class="bar c"><span id="rootbar"></span></div></div>
+        <div class="kpi"><span class="small">穀物</span><b id="gGrain">–</b><span class="small">g</span><div class="small">≈ <b id="kGrain">–</b> kcal</div><div class="bar c"><span id="grainbar"></span></div></div>
         <div class="kpi"><span class="small">果物</span><b id="gFruit">–</b><span class="small">g</span><div class="small">≈ <b id="kFruit">–</b> kcal</div><div class="bar c"><span id="fruitbar"></span></div></div>
       </div>
       <div class="small" style="margin-top:8px;opacity:.95">
-        ※100gあたり代表値（目安）：肉 280kcal / 魚介類 150kcal / 卵 150kcal / 乳製品 160kcal / 穀物・根菜 130kcal / 果物 60kcal
+        ※100gあたり代表値（目安）：肉 280kcal / 魚介類 150kcal / 卵・乳製品 155kcal / 根菜 80kcal / 穀物 220kcal / 果物 60kcal
       </div>
     </section>
 
@@ -441,7 +441,9 @@ function dailyAdjustment(habit, fitnessType){
   const f = FIT_TYPE_FACTOR[fitnessType||"none"] || 1.00;
   return clamp(f, 0.90, 1.10);
 }
-const KCAL_PER_100G = { meat:280, fish:150, eggs:150, dairy:160, groot:130, fruit:60 };
+
+/* ✅ 代表値（100gあたり）— 指定の変更を反映 */
+const KCAL_PER_100G = { meat:280, fish:150, eggDairy:155, root:80, grain:220, fruit:60 };
 
 /* unknown推定（茶碗/枚/拳） */
 function estimateFromUnknown(){
@@ -537,26 +539,40 @@ function estimateElectrolytes(habit, fitnessType, currentCarb, w, age){
   };
 }
 
-/* 食材配分：その日の糖質kcal=植物（穀物・根菜/果物）に等配（6:4）、残りを動物性で配分 */
-function computeFoodDistribution(kcalTotal, fitnessType, carb_g){
-  const ck = Math.max(0, carb_g*4); // 植物側の合計
-  let kGroot = ck * 0.6;
-  let kFruit = ck * 0.4;
+/* ✅ 食材配分
+   - 植物側は週で配分：1〜2週目＝穀物/根菜優位、3週目以降＝果物優位
+   - 動物性（肉/魚介/卵・乳製品）への配分をやや引き上げ（合計は維持）
+*/
+function computeFoodDistribution(kcalTotal, fitnessType, carb_g, dayIndex=0){
+  const ck_raw = Math.max(0, carb_g*4);
 
-  const remain = Math.max(0, kcalTotal - ck);
-  let sp = { meat:0.60, fish:0.12, eggs:0.14, dairy:0.14 };
+  // 週別：果物の比率
+  const week = Math.floor(dayIndex/7) + 1;
+  const fruitFrac = (week <= 2) ? 0.35 : 0.60; // 1-2週:果物35%、3週〜:果物60%
+  const nonFruitFrac = 1 - fruitFrac;
+  const grainFrac = nonFruitFrac * 0.55; // 穀物55%
+  const rootFrac  = nonFruitFrac * 0.45; // 根菜45%
 
+  // 動物性をわずかに強化（植物→動物へ8%スライド）
+  const animalBias = 0.08;
+  const ck = ck_raw * (1 - animalBias);
+  const animalTotal = Math.max(0, kcalTotal - ck);
+
+  // 動物性の内訳（基準は肉>卵乳>魚）。種目で微調整
+  let sp = { meat:0.60, fish:0.14, eggDairy:0.30 }; // 卵・乳製品やや増
   if(["run","cycle","aerobic","club"].includes(fitnessType)){ sp.fish+=0.02; sp.meat-=0.02; }
-  else if(["strength","anaerobic","martial"].includes(fitnessType)){ sp.meat+=0.03; sp.eggs+=0.02; sp.dairy-=0.05; }
+  else if(["strength","anaerobic","martial"].includes(fitnessType)){ sp.meat+=0.03; sp.eggDairy+=0.02; sp.fish-=0.05; }
+  const sumA = sp.meat+sp.fish+sp.eggDairy; for(const k in sp) sp[k]/=sumA;
 
-  const sumA = sp.meat+sp.fish+sp.eggs+sp.dairy; for(const k in sp) sp[k]/=sumA;
+  const kMeat     = animalTotal * sp.meat;
+  const kFish     = animalTotal * sp.fish;
+  const kEggDairy = animalTotal * sp.eggDairy;
 
-  const kMeat  = remain * sp.meat;
-  const kFish  = remain * sp.fish;
-  const kEggs  = remain * sp.eggs;
-  const kDairy = remain * sp.dairy;
+  const kFruit = ck * fruitFrac;
+  const kGrain = ck * grainFrac;
+  const kRoot  = ck * rootFrac;
 
-  return { kMeat,kFish,kEggs,kDairy,kGroot,kFruit };
+  return { kMeat,kFish,kEggDairy,kRoot,kGrain,kFruit };
 }
 
 /* 週あたり運動日（推移の微調整用） */
@@ -627,7 +643,7 @@ function updateBars(pk, fk, ck, total){
   $("pbar").style.width=p+"%"; $("fbar").style.width=f+"%"; $("cbar").style.width=c+"%";
 }
 function updateFoodBars(parts, total){
-  const bars={meat:"meatbar",fish:"fishbar",eggs:"eggsbar",dairy:"dairybar",groot:"grootbar",fruit:"fruitbar"};
+  const bars={meat:"meatbar",fish:"fishbar",eggDairy:"eggDairybar",root:"rootbar",grain:"grainbar",fruit:"fruitbar"};
   Object.keys(bars).forEach(k=>{
     const v = total? Math.min(100, Math.round((parts[k]/total)*100)) : 0;
     $(bars[k]).style.width = v+"%";
@@ -716,7 +732,7 @@ function drawCarbChart({series, weekIndex}){
 function buildWeekButtons(weeks){
   const wrap = $("weekBtns");
   wrap.innerHTML = "";
-  for(let i=0;i<weeks;i++){
+  for(let i=0; i<weeks; i++){
     const b=document.createElement("button");
     b.textContent = `${i+1}週目`;
     b.dataset.weekIndex = String(i);
@@ -750,7 +766,7 @@ if(!window._weekBtnBound){
     if(!xs.length) return;
 
     let best=0, bestD=1e9;
-    xs.forEach((xx,i)=>{ const d=(xx-x)*(xx-x); if(d<bestD){ bestD=d; best=i; }});
+    xs.forEach((xx,i)=>{ const d=(xx-x)*(xx-x); if(d<bestD){ bestD=d; } best=i; });
     const dayIndexGlobal = a.weekIndex*7 + best + 1;
     const val = a.series[a.weekIndex*7 + best];
 
@@ -948,7 +964,7 @@ function selectDay(dayGlobalIndex, silent){
   $("fkcal").textContent=Math.round(fk).toLocaleString();
   $("ckcal").textContent=Math.round(ck).toLocaleString();
 
-  // ② 脂質下限の注意表記は不要（非表示固定）
+  // 注意表記は非表示固定
   $("fatWarn").style.display="none";
 
   // 電解質（活動量/糖質量ベース）
@@ -957,30 +973,33 @@ function selectDay(dayGlobalIndex, silent){
   $("na").textContent = elec.na.toLocaleString();
   $("mg").textContent = elec.mg.toLocaleString();
 
-  // ③ 文言更新（句点なし）※推定→推定値 に変更
+  // 文言更新
   const habitLabel = {"1.2":"ほぼ運動しない","1.375":"週1〜2日","1.55":"週3〜4日","1.725":"週5〜6日","1.9":"毎日/肉体労働"}[$("habit").value] || "—";
   const fitnessLabelMap={none:"該当なし",strength:"筋トレ",run:"ランニング",cycle:"サイクリング",club:"部活動",martial:"格闘技",aerobic:"その他（有酸素運動）",anaerobic:"その他（無酸素運動）"};
   $("macroNote").textContent =
     `選択日：${d+1}日目｜運動習慣：${habitLabel}｜フィットネス：${fitnessLabelMap[fitnessType]||"—"}｜` +
     `Na/K/Mgは活動量/糖質量に基づく推定値`;
 
-  // 食材配分（④/⑤：各日で変動）
-  const parts = computeFoodDistribution(kcal, fitnessType, carb_g);
-  $("kMeat").textContent  = Math.round(parts.kMeat);
-  $("kFish").textContent  = Math.round(parts.kFish);
-  $("kEggs").textContent  = Math.round(parts.kEggs);
-  $("kDairy").textContent = Math.round(parts.kDairy);
-  $("kGroot").textContent = Math.round(parts.kGroot);
-  $("kFruit").textContent = Math.round(parts.kFruit);
+  // ✅ 食材配分（週別に植物側の重みを反映 & 動物性3カテゴリ）
+  const parts = computeFoodDistribution(kcal, fitnessType, carb_g, d);
+  $("kMeat").textContent      = Math.round(parts.kMeat);
+  $("kFish").textContent      = Math.round(parts.kFish);
+  $("kEggDairy").textContent  = Math.round(parts.kEggDairy);
+  $("kRoot").textContent      = Math.round(parts.kRoot);
+  $("kGrain").textContent     = Math.round(parts.kGrain);
+  $("kFruit").textContent     = Math.round(parts.kFruit);
 
-  $("gMeat").textContent  = round10(parts.kMeat  /KCAL_PER_100G.meat *100);
-  $("gFish").textContent  = round10(parts.kFish  /KCAL_PER_100G.fish *100);
-  $("gEggs").textContent  = round10(parts.kEggs  /KCAL_PER_100G.eggs *100);
-  $("gDairy").textContent = round10(parts.kDairy /KCAL_PER_100G.dairy*100);
-  $("gGroot").textContent = round10(parts.kGroot /KCAL_PER_100G.groot*100);
-  $("gFruit").textContent = round10(parts.kFruit /KCAL_PER_100G.fruit*100);
+  $("gMeat").textContent      = round10(parts.kMeat     /KCAL_PER_100G.meat    *100);
+  $("gFish").textContent      = round10(parts.kFish     /KCAL_PER_100G.fish    *100);
+  $("gEggDairy").textContent  = round10(parts.kEggDairy /KCAL_PER_100G.eggDairy*100);
+  $("gRoot").textContent      = round10(parts.kRoot     /KCAL_PER_100G.root    *100);
+  $("gGrain").textContent     = round10(parts.kGrain    /KCAL_PER_100G.grain   *100);
+  $("gFruit").textContent     = round10(parts.kFruit    /KCAL_PER_100G.fruit   *100);
 
-  updateFoodBars({meat:parts.kMeat,fish:parts.kFish,eggs:parts.kEggs,dairy:parts.kDairy,groot:parts.kGroot,fruit:parts.kFruit},kcal);
+  updateFoodBars(
+    {meat:parts.kMeat,fish:parts.kFish,eggDairy:parts.kEggDairy,root:parts.kRoot,grain:parts.kGrain,fruit:parts.kFruit},
+    kcal
+  );
   updateBars(pk, fk, ck, kcal);
 
   // スケジュール側の日ボタンの選択ハイライト
