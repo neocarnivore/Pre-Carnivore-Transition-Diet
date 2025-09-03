@@ -251,7 +251,7 @@
       </div>
     </div>
     <div class="small" id="repValuesNote" style="margin-top:8px;opacity:.95">
-      ※代表値（目安）：茶碗1杯 55g / 1枚(個) 25g / 拳1個分 20g<br>間食/果物/飲料/お菓子/加工食品/調味料等も含む推定値
+      ※代表値（目安）：茶碗1杯 55g / 1枚(個) 25g / 拳1個分 20g｜間食/果物/飲料/お菓子/加工食品/調味料等も含む推定値
     </div>
   </div>
 
@@ -549,7 +549,8 @@ function computeFoodDistribution(kcalTotal, fitnessType, carb_g){
   if(["run","cycle","aerobic","club"].includes(fitnessType)){ sp.fish+=0.02; sp.meat-=0.02; }
   else if(["strength","anaerobic","martial"].includes(fitnessType)){ sp.meat+=0.03; sp.eggs+=0.02; sp.dairy-=0.05; }
 
-  const sumA = sp.meat+sp.fish+sp.eggs+sp.dairy; for(const k in sp) sp[k]/=sumA;
+  const sumA = sp.meat+sp.fish+sp.eggs+dairy=sp.dairy; // keep ratio sum stable
+  for(const k in sp) sp[k]/=sumA;
 
   const kMeat  = remain * sp.meat;
   const kFish  = remain * sp.fish;
