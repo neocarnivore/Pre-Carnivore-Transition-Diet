@@ -96,7 +96,7 @@
     padding:10px 12px;border-radius:12px;cursor:pointer;transition:.15s transform,.15s box-shadow
   }
   .segBtn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(0,0,0,.18)}
-  .segBtn.active{背景:var(--acc);color:#fff;border-color:transparent}
+  .segBtn.active{background:var(--acc);color:#fff;border-color:transparent}
   @media (max-width:560px){
     #dayList .btnGrid{grid-template-columns:repeat(4,minmax(0,1fr))}
   }
@@ -319,7 +319,7 @@
 
     <section id="chartSection" class="section" style="display:none">
       <h3>糖質量推移</h3>
-      <div class="kpi chartCard" style="border:none;background:transparent;box-shadow:none">
+      <div class="kpi chartCard" style="border:none;background:透明;box-shadow:none">
         <div class="chartHeader">
           <div class="small" id="chartTitle" style="font-weight:700">期間</div>
           <div class="chartBtns" id="weekBtns" role="tablist" aria-label="期間（週）">
@@ -949,7 +949,7 @@ function selectDay(dayGlobalIndex, silent){
   $("na").textContent = elec.na.toLocaleString();
   $("mg").textContent = elec.mg.toLocaleString();
 
-  // ③ 文言更新（句点なし）
+  // ③ 文言更新（句点なし）— ★ここを「推定値」に変更
   const habitLabel = {"1.2":"ほぼ運動しない","1.375":"週1〜2日","1.55":"週3〜4日","1.725":"週5〜6日","1.9":"毎日/肉体労働"}[$("habit").value] || "—";
   const fitnessLabelMap={none:"該当なし",strength:"筋トレ",run:"ランニング",cycle:"サイクリング",club:"部活動",martial:"格闘技",aerobic:"その他（有酸素運動）",anaerobic:"その他（無酸素運動）"};
   $("macroNote").textContent =
