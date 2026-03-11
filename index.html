@@ -463,6 +463,189 @@ function applyFormData(d){
 
   enforceHabitRules();
 }
+function closePresetMenu(){
+  const menu = $("presetMenu");
+  if(menu) menu.style.display = "none";
+}
+
+function loadPresets(){
+  try{
+    return JSON.parse(localStorage.getItem(PRESET_KEY) || "{}");
+  }catch{
+    return {};
+  }
+}
+
+function savePresets(obj){
+  localStorage.setItem(PRESET_KEY, JSON.stringify(obj));
+}
+
+function refreshPresetSelect(){
+  const sel = $("presetSelect");
+  if(!sel) return;
+
+  const presets = loadPresets();
+  const current = sel.value;
+
+  sel.innerHTML = `<option value="">条件呼び出し</option>`;
+  Object.keys(presets).forEach(name=>{
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.textContent = name;
+    sel.appendChild(opt);
+  });
+
+  if(current && presets[current]) sel.value = current;
+}
+function saveCurrentPreset(){
+  closePresetMenu();
+  const name = prompt("保存名を入力してください");
+  if(!name) return;
+
+  const trimmed = name.trim();
+  if(!trimmed){
+    alert("保存名を入力してください");
+    return;
+  }
+
+  const presets = loadPresets();
+
+  if(presets[trimmed]){
+    alert("同じ名前の条件は保存できません");
+    return;
+  }
+
+  presets[trimmed] = getCurrentFormData();
+  savePresets(presets);
+  localStorage.setItem(LAST_PRESET_KEY, trimmed);
+  refreshPresetSelect();
+  $("presetSelect").value = trimmed;
+  alert(`「${trimmed}」を保存しました`);
+}
+
+function loadSelectedPreset(){
+  closePresetMenu();
+  const name = $("presetSelect").value;
+  if(!name) return;
+
+  const presets = loadPresets();
+  if(!presets[name]) return;
+
+  applyFormData(presets[name]);
+  localStorage.setItem(LAST_PRESET_KEY, name);
+}
+
+function restoreLastPreset(){
+  refreshPresetSelect();
+  const last = localStorage.getItem(LAST_PRESET_KEY);
+  const presets = loadPresets();
+  if(last && presets[last]){
+    $("presetSelect").value = last;
+    applyFormData(presets[last]);
+  }
+}
+function renameSelectedPreset(){
+  const current = $("presetSelect").value;
+  if(!current){
+    alert("編集する条件を先に選択してください");
+    return;
+  }
+
+  const presets = loadPresets();
+  if(!presets[current]) return;
+
+  const nextName = prompt("新しい保存名を入力してください", current);
+  if(nextName == null) return;
+
+  const trimmed = nextName.trim();
+  if(!trimmed){
+    alert("保存名を入力してください");
+    return;
+  }
+  if(trimmed === current) return;
+
+  if(presets[trimmed]){
+    alert("同じ名前の条件がすでにあります");
+    return;
+  }
+
+  presets[trimmed] = presets[current];
+  delete presets[current];
+  savePresets(presets);
+
+  localStorage.setItem(LAST_PRESET_KEY, trimmed);
+  refreshPresetSelect();
+  $("presetSelect").value = trimmed;
+}
+
+function deleteSelectedPreset(){
+  closePresetMenu();
+  const current = $("presetSelect").value;
+  if(!current){
+    alert("削除する条件を先に選択してください");
+    return;
+  }
+
+  const presets = loadPresets();
+  if(!presets[current]) return;
+
+  const ok = confirm(`「${current}」を削除しますか？`);
+  if(!ok) return;
+
+  delete presets[current];
+  savePresets(presets);
+
+  const last = localStorage.getItem(LAST_PRESET_KEY);
+  if(last === current){
+    localStorage.removeItem(LAST_PRESET_KEY);
+  }
+
+  refreshPresetSelect();
+  $("presetSelect").value = "";
+}
+function resetFormAll(){
+  closePresetMenu();
+
+  localStorage.removeItem(LAST_PRESET_KEY);
+  sessionStorage.removeItem("transitionAutoFormV7");
+  sessionStorage.removeItem("autocalc");
+
+  const ids = ["sex","age","height","weight","habit","fitnessType","curCarbSel","riceSel","breadSel","rootsSel"];
+  ids.forEach(id=>{
+    const el = $(id);
+    if(!el) return;
+    if(el.tagName==="SELECT") el.selectedIndex = 0;
+    else el.value = "";
+  });
+
+  $("fitnessType").disabled = true;
+  setNoneOptionVisible("fitnessType", false);
+
+  $("riceDiv").style.display = "none";
+  $("breadDiv").style.display = "none";
+  $("rootsDiv").style.display = "none";
+
+  ["baseCard","nowGoalCard","macroCard","mixCard","scheduleCard"].forEach(id=>{
+    const el = $(id);
+    if(el) el.style.display = "none";
+  });
+
+  if($("presetSelect")) $("presetSelect").value = "";
+
+  if($("weekList")) $("weekList").innerHTML = "";
+  if($("dayBtns")) $("dayBtns").innerHTML = "";
+  if($("weekBtns")) $("weekBtns").innerHTML = "";
+
+  const tip = $("chartTip");
+  if(tip) tip.style.display = "none";
+
+  window._series = null;
+  window._weeks = null;
+  window._ctxMeta = null;
+  window._selectedDay = null;
+  window._lastChartArgs = null;
+  window._grainStartG = null;
+}
 
 /* テーマ */
 function applyThemeFromStorage(){
@@ -483,6 +666,92 @@ function updateThemeBtn(){
 }
 $('themeToggle').addEventListener('click', toggleTheme);
 applyThemeFromStorage();
+$("saveBtn").addEventListener("click", saveCurrentPreset);
+$("resetBtn").addEventListener("click", resetFormAll);
+$("presetSelect").addEventListener("change", loadSelectedPreset);
+
+$("presetManageBtn").addEventListener("click", (e)=>{
+  e.stopPropagation();
+  const menu = $("presetMenu");
+  if(!menu) return;
+  menu.style.display = (menu.style.display === "block") ? "none" : "block";
+});
+
+$("presetEditBtn").addEventListener("click", (e)=>{
+  e.stopPropagation();
+
+  const presets = loadPresets();
+  const names = Object.keys(presets);
+
+  if(!names.length){
+    alert("保存された条件がありません");
+    closePresetMenu();
+    return;
+  }
+
+  const name = prompt("編集する条件名を入力してください\n\n" + names.join("\n"));
+  if(name == null){
+    closePresetMenu();
+    return;
+  }
+
+  const trimmed = name.trim();
+  if(!trimmed || !presets[trimmed]){
+    alert("該当する条件名がありません");
+    closePresetMenu();
+    return;
+  }
+
+  $("presetSelect").value = trimmed;
+  renameSelectedPreset();
+  closePresetMenu();
+});
+
+$("presetDeleteBtn").addEventListener("click", (e)=>{
+  e.stopPropagation();
+
+  const presets = loadPresets();
+  const names = Object.keys(presets);
+
+  if(!names.length){
+    alert("保存された条件がありません");
+    closePresetMenu();
+    return;
+  }
+
+  const name = prompt("削除する条件名を入力してください\n\n" + names.join("\n"));
+  if(name == null){
+    closePresetMenu();
+    return;
+  }
+
+  const trimmed = name.trim();
+  if(!trimmed || !presets[trimmed]){
+    alert("該当する条件名がありません");
+    closePresetMenu();
+    return;
+  }
+
+  $("presetSelect").value = trimmed;
+  deleteSelectedPreset();
+  closePresetMenu();
+});
+
+document.addEventListener("click", (e)=>{
+  const menu = $("presetMenu");
+  const btn = $("presetManageBtn");
+
+  if(!menu || !btn) return;
+
+  const clickedInsideMenu = menu.contains(e.target);
+  const clickedManageBtn = btn.contains(e.target);
+
+  if(!clickedInsideMenu && !clickedManageBtn){
+    closePresetMenu();
+  }
+});
+
+window.addEventListener("scroll", closePresetMenu, { passive:true });
 
 /* 現在糖質＝unknown時の推定UI表示 + 代表値注記の制御 */
 $("curCarbSel").addEventListener("change", ()=>{
@@ -1255,12 +1524,38 @@ function restoreFormFresh(){
     if(el.tagName==="SELECT"){ el.selectedIndex = 0; }
     else el.value = "";
   });
-  ["baseCard","nowGoalCard","macroCard","mixCard","scheduleCard"].forEach(id=>$(id).style.display="none");
+
+  ["baseCard","nowGoalCard","macroCard","mixCard","scheduleCard"].forEach(id=>{
+    const el = $(id);
+    if(el) el.style.display = "none";
+  });
+
   $("fitnessType").disabled = true;
   setNoneOptionVisible("fitnessType", false);
-  $("riceDiv").style.display="none"; $("breadDiv").style.display="none"; $("rootsDiv").style.display="none";
+
+  $("riceDiv").style.display = "none";
+  $("breadDiv").style.display = "none";
+  $("rootsDiv").style.display = "none";
+
+  if($("presetSelect")) $("presetSelect").value = "";
+
+  if($("weekList")) $("weekList").innerHTML = "";
+  if($("dayBtns")) $("dayBtns").innerHTML = "";
+  if($("weekBtns")) $("weekBtns").innerHTML = "";
+
+  const tip = $("chartTip");
+  if(tip) tip.style.display = "none";
+
+  window._series = null;
+  window._weeks = null;
+  window._ctxMeta = null;
+  window._selectedDay = null;
+  window._lastChartArgs = null;
+  window._grainStartG = null;
 }
 if(!restoreFromSessionAndAutoCalc()){ restoreFormFresh(); }
+restoreLastPreset();
+refreshPresetSelect();
 
 /* リサイズ時の再描画 */
 let _resizeId;
