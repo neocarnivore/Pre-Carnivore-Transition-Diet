@@ -119,6 +119,25 @@ body:not(.light){
   @media (max-width:560px){
     #dayList .btnGrid{grid-template-columns:repeat(4,minmax(0,1fr))}
   }
+  .actionRow{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:10px;
+  margin-top:18px;
+}
+#saveBtn,#calcBtn,#resetBtn{
+  width:100%;
+}
+#saveBtn,#resetBtn{
+  background:transparent;
+  border:1px solid var(--border);
+  color:var(--text);
+}
+#calcBtn{
+  background:var(--acc);
+  color:#fff;
+  border:none;
+}
 </style>
 </head>
 <body>
@@ -266,9 +285,11 @@ box-shadow:0 8px 20px rgba(0,0,0,.25);
       </div>
     </div>
 
-    <div style="margin-top:12px">
-      <button id="calcBtn" aria-pressed="false">計算</button>
-    </div>
+    <div class="actionRow">
+  <button id="saveBtn" type="button">条件保存</button>
+  <button id="calcBtn" type="button" aria-pressed="false">計算</button>
+  <button id="resetBtn" type="button">リセット</button>
+</div>
   </div>
 
   <!-- 基礎データ -->
