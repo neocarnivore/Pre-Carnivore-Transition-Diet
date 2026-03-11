@@ -123,9 +123,41 @@ body:not(.light){
 </head>
 <body>
 <header>
-  <div>移行食プランナー🥑</div>
-  <button id="themeToggle" style="width:auto;padding:8px 12px;background:transparent;border:1px solid var(--border);color:var(--text)">🌙/☀︎</button>
+  <div style="display:flex;align-items:center;gap:8px;min-width:0">
+    <div>移行食プランナー🥑</div>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:8px">
+    <select id="presetSelect" style="width:auto;max-width:140px;padding:8px 10px">
+      <option value="">条件呼び出し</option>
+    </select>
+    <button id="presetManageBtn" type="button" style="width:auto;padding:8px 10px;background:transparent;border:1px solid var(--border);color:var(--text)">･･･</button>
+    <button id="themeToggle" style="width:auto;padding:8px 12px;background:transparent;border:1px solid var(--border);color:var(--text)">🌙/☀︎</button>
+  </div>
 </header>
+
+<div id="presetMenu" style="
+position:absolute;
+top:60px;
+right:14px;
+background:var(--card);
+border:1px solid var(--border);
+border-radius:10px;
+padding:6px;
+display:none;
+z-index:2000;
+box-shadow:0 8px 20px rgba(0,0,0,.25);
+">
+  <button id="presetEditBtn"
+  style="width:100%;margin-bottom:6px;background:transparent;border:1px solid var(--border);color:var(--text)">
+  編集
+  </button>
+
+  <button id="presetDeleteBtn"
+  style="width:100%;background:transparent;border:1px solid var(--border);color:var(--text)">
+  削除
+  </button>
+</div>
 
 <div class="wrap">
   <!-- 入力 -->
