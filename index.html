@@ -420,6 +420,49 @@ const $ = id => document.getElementById(id);
 /* ユーティリティ */
 const clamp = (x, lo, hi) => Math.min(hi, Math.max(lo, x));
 const round10 = v => Math.round(v/10)*10;
+const PRESET_KEY = "transition_planner_presets_v1";
+const LAST_PRESET_KEY = "transition_planner_last_preset_v1";
+function getCurrentFormData(){
+  return {
+    sex:$("sex").value,
+    age:$("age").value,
+    height:$("height").value,
+    weight:$("weight").value,
+    habit:$("habit").value,
+    fitnessType:$("fitnessType").value,
+    curCarbSel:$("curCarbSel").value,
+    riceSel:$("riceSel") ? $("riceSel").value : "",
+    breadSel:$("breadSel") ? $("breadSel").value : "",
+    rootsSel:$("rootsSel") ? $("rootsSel").value : ""
+  };
+}
+function applyFormData(d){
+  if(!d) return;
+
+  if(d.sex != null) $("sex").value = d.sex;
+  if(d.age != null) $("age").value = d.age;
+  if(d.height != null) $("height").value = d.height;
+  if(d.weight != null) $("weight").value = d.weight;
+  if(d.habit != null) $("habit").value = d.habit;
+  if(d.fitnessType != null) $("fitnessType").value = d.fitnessType;
+  if(d.curCarbSel != null) $("curCarbSel").value = d.curCarbSel;
+
+  if(d.curCarbSel === "unknown"){
+    $("curCarbSel").dispatchEvent(new Event("change"));
+  }else{
+    $("riceDiv").style.display = "none";
+    $("breadDiv").style.display = "none";
+    $("rootsDiv").style.display = "none";
+    const rep = $("repValuesNote");
+    if(rep) rep.style.display = "none";
+  }
+
+  if(d.riceSel != null && $("riceSel")) $("riceSel").value = d.riceSel;
+  if(d.breadSel != null && $("breadSel")) $("breadSel").value = d.breadSel;
+  if(d.rootsSel != null && $("rootsSel")) $("rootsSel").value = d.rootsSel;
+
+  enforceHabitRules();
+}
 
 /* テーマ */
 function applyThemeFromStorage(){
