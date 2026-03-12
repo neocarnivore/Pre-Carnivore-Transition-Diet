@@ -1575,7 +1575,16 @@ function restoreFromSessionAndAutoCalc(){
     if(d.riceSel)  $("riceSel").value=d.riceSel;
     if(d.breadSel) $("breadSel").value=d.breadSel;
     if(d.rootsSel) $("rootsSel").value=d.rootsSel;
+
     enforceHabitRules();
+
+    refreshPresetSelect();
+    const last = localStorage.getItem(LAST_PRESET_KEY);
+    const presets = loadPresets();
+    if(last && presets[last] && $("presetSelect")){
+      $("presetSelect").value = last;
+    }
+
     calc();
   }catch{}
   sessionStorage.removeItem("transitionAutoFormV7");
