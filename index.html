@@ -471,6 +471,23 @@ function getCurrentFormData(){
     rootsSel:$("rootsSel") ? $("rootsSel").value : ""
   };
 }
+
+function isSamePresetData(a, b){
+  if(!a || !b) return false;
+  return (
+    (a.sex ?? "") === (b.sex ?? "") &&
+    (a.age ?? "") === (b.age ?? "") &&
+    (a.height ?? "") === (b.height ?? "") &&
+    (a.weight ?? "") === (b.weight ?? "") &&
+    (a.habit ?? "") === (b.habit ?? "") &&
+    (a.fitnessType ?? "") === (b.fitnessType ?? "") &&
+    (a.curCarbSel ?? "") === (b.curCarbSel ?? "") &&
+    (a.riceSel ?? "") === (b.riceSel ?? "") &&
+    (a.breadSel ?? "") === (b.breadSel ?? "") &&
+    (a.rootsSel ?? "") === (b.rootsSel ?? "")
+  );
+}
+
 function applyFormData(d){
   if(!d) return;
 
@@ -840,7 +857,17 @@ function enforceHabitRules(){
 /* 計算ボタン：保存→リロード→自動計算 */
 $("calcBtn").addEventListener("click", ()=>{
   if(requireFilled()){
-    detachPresetSelection();
+    const selectedName = $("presetSelect") ? $("presetSelect").value : "";
+    const presets = loadPresets();
+    const currentData = getCurrentFormData();
+    const selectedPresetData = selectedName && presets[selectedName] ? presets[selectedName] : null;
+
+    if(selectedPresetData && !isSamePresetData(currentData, selectedPresetData)){
+      detachPresetSelection();
+    }else if(selectedName){
+      localStorage.setItem(LAST_PRESET_KEY, selectedName);
+    }
+
     if(document.activeElement && typeof document.activeElement.blur === 'function'){ document.activeElement.blur(); }
     const vp = document.querySelector('meta[name="viewport"]');
     if(vp){
