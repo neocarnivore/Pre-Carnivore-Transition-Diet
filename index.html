@@ -502,6 +502,13 @@ function closePresetMenu(){
   const menu = $("presetMenu");
   if(menu) menu.classList.remove("show");
 }
+function detachPresetSelection(){
+  const sel = $("presetSelect");
+  if(sel){
+    sel.value = "";
+  }
+  localStorage.removeItem(LAST_PRESET_KEY);
+}
 
 function loadPresets(){
   try{
@@ -833,8 +840,11 @@ function enforceHabitRules(){
 }
 
 /* 計算ボタン：保存→リロード→自動計算 */
+/* 計算ボタン：保存→リロード→自動計算 */
 $("calcBtn").addEventListener("click", ()=>{
   if(requireFilled()){
+    detachPresetSelection();
+
     if(document.activeElement && typeof document.activeElement.blur === 'function'){ document.activeElement.blur(); }
     const vp = document.querySelector('meta[name="viewport"]');
     if(vp){
@@ -1588,8 +1598,13 @@ function restoreFormFresh(){
   window._lastChartArgs = null;
   window._grainStartG = null;
 }
-if(!restoreFromSessionAndAutoCalc()){ restoreFormFresh(); }
-restoreLastPreset();
+const restoredAutoCalc = restoreFromSessionAndAutoCalc();
+
+if(!restoredAutoCalc){
+  restoreFormFresh();
+  restoreLastPreset();
+}
+
 refreshPresetSelect();
 
 /* リサイズ時の再描画 */
