@@ -423,6 +423,25 @@ body:not(.light){
         100gあたり代表値（目安）：肉 280kcal / 魚介類 150kcal / 卵・乳製品 155kcal / 根菜 80kcal / 穀物 220kcal / 果物 60kcal
       </div>
     </section>
+
+    <section id="chartSection" class="section" style="display:none">
+      <h3>糖質量推移</h3>
+      <div class="kpi chartCard" style="border:none;background:transparent;box-shadow:none">
+        <div class="chartHeader">
+          <div class="small" id="chartTitle" style="font-weight:700">期間</div>
+          <div class="chartBtns" id="weekBtns" role="tablist" aria-label="期間（週）">
+            <!-- 1週目〜動的 -->
+          </div>
+        </div>
+        <canvas id="wtChart" height="260" aria-label="糖質量推移グラフ" role="img"></canvas>
+        <div id="chartTip" class="tip" style="display:none"></div>
+        <div class="small" id="chartNote" style="margin-top:8px;opacity:.95;text-align:center">
+          このグラフは目安です。体調に応じて調整してください。<br>
+          また、運動をされる方は運動前に糖質を集中させましょう。
+        </div>
+      </div>
+    </section>
+  </div>
 <!-- ===== 週間マクロ配分（移行食プランナー用）：ここから（macroCardの直後 / mixCardの前に置く） ===== -->
 <section id="transitionWeekMacroSection" class="section" style="display:none;margin:10px 0 0">
   <div class="card twmCard">
@@ -1080,25 +1099,6 @@ body:not(.light){
 })();
 </script>
 <!-- ===== 週間マクロ配分（移行食プランナー用）：ここまで ===== -->
-    <section id="chartSection" class="section" style="display:none">
-      <h3>糖質量推移</h3>
-      <div class="kpi chartCard" style="border:none;background:transparent;box-shadow:none">
-        <div class="chartHeader">
-          <div class="small" id="chartTitle" style="font-weight:700">期間</div>
-          <div class="chartBtns" id="weekBtns" role="tablist" aria-label="期間（週）">
-            <!-- 1週目〜動的 -->
-          </div>
-        </div>
-        <canvas id="wtChart" height="260" aria-label="糖質量推移グラフ" role="img"></canvas>
-        <div id="chartTip" class="tip" style="display:none"></div>
-        <div class="small" id="chartNote" style="margin-top:8px;opacity:.95;text-align:center">
-          このグラフは目安です。体調に応じて調整してください。<br>
-          また、運動をされる方は運動前に糖質を集中させましょう。
-        </div>
-      </div>
-    </section>
-  </div>
-
   <p class="small footerNote" style="margin-top:20px">
     各プランはカーニボア食・ケトジェニック食を支持する医師・医学博士らの文献・著書・研究のもと設計しています。<br>
     参考: Virta Health（<a href="https://www.youtube.com/@VirtaHealth" target="_blank" rel="noopener">YouTube</a>） / The Noakes Foundation（<a href="https://www.youtube.com/@TheNoakesFoundation" target="_blank" rel="noopener">YouTube</a>）
