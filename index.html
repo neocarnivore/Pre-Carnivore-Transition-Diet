@@ -401,7 +401,663 @@ body:not(.light){
     <div class="small" id="macroNote" style="margin-top:6px;opacity:.95"></div>
     <div class="warn" id="fatWarn" style="display:none"></div>
   </div>
+<!-- ===== 週間マクロ配分（移行食プランナー用）：ここから（macroCardの直後 / mixCardの前に置く） ===== -->
+<section id="transitionWeekMacroSection" class="section" style="display:none;margin:10px 0 0">
+  <div class="card twmCard">
+    <div class="twmHeader">
+      <div class="twmHeaderLeft">
+        <h3 class="twmTitle">週間マクロ配分</h3>
 
+        <div class="small twmMetaRow">
+          <span class="twmAvgText" id="twmAvgText">週平均：P116g / F154g / C50g</span>
+
+          <div class="twmLegend">
+            <span><i class="twmDot p"></i>P</span>
+            <span><i class="twmDot f"></i>F</span>
+            <span><i class="twmDot c"></i>C</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="twmChartShell">
+      <svg id="twmLineSvg" class="twmLineSvg" viewBox="0 0 700 150" preserveAspectRatio="none" aria-hidden="true"></svg>
+      <div class="twmChart" id="twmChart"></div>
+    </div>
+
+    <div class="small twmFormula" id="twmFormulaText">
+      実効p（週平均）≈2.24g/kg｜F = {kcal - 4(P + C)} ÷ 9
+    </div>
+  </div>
+</section>
+
+<style>
+  .twmCard{ overflow:visible; }
+
+  .twmHeader{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:14px;
+    flex-wrap:wrap;
+  }
+  .twmHeaderLeft{
+    min-width:0;
+    width:100%;
+  }
+  .twmTitle{ margin:0 0 10px; }
+
+  .twmMetaRow{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    width:100%;
+    opacity:.95;
+    flex-wrap:nowrap;
+  }
+  .twmAvgText{
+    white-space:nowrap;
+    text-align:left;
+  }
+
+  .twmLegend{
+    display:flex;
+    justify-content:flex-end;
+    gap:12px;
+    font-size:12px;
+    color:var(--muted);
+    line-height:1;
+    white-space:nowrap;
+    margin-left:auto;
+  }
+  .twmLegend span{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+  }
+  .twmDot{
+    width:8px;
+    height:8px;
+    border-radius:999px;
+    display:inline-block;
+  }
+  .twmDot.p{ background:var(--p); }
+  .twmDot.f{ background:var(--f); }
+  .twmDot.c{ background:var(--c); }
+
+  .twmChartShell{
+    position:relative;
+    border:1px solid var(--border);
+    background:#fff;
+    border-radius:16px;
+    padding:10px 8px 12px;
+    overflow:hidden;
+    -webkit-tap-highlight-color:transparent;
+    touch-action:manipulation;
+    box-shadow:none !important;
+  }
+  body:not(.light) .twmChartShell{
+    background:#000;
+    border-color:rgba(255,255,255,.14);
+  }
+
+  .twmChartShell *,
+  .twmChartShell *::before,
+  .twmChartShell *::after{
+    -webkit-tap-highlight-color:transparent;
+    touch-action:manipulation;
+    user-select:none;
+    -webkit-user-select:none;
+  }
+
+  .twmLineSvg{
+    position:absolute;
+    left:8px;
+    right:8px;
+    top:54px;
+    width:calc(100% - 16px);
+    height:86px;
+    pointer-events:none;
+    z-index:4;
+    overflow:visible;
+  }
+  .twmLinePath{
+    fill:none;
+    stroke:#48d1b5;
+    stroke-width:3;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    pointer-events:none;
+  }
+  .twmLineMarker{
+    fill:#48d1b5;
+    stroke:none;
+    opacity:1;
+    vector-effect:non-scaling-stroke;
+    shape-rendering:geometricPrecision;
+  }
+
+  .twmChart{
+    position:relative;
+    z-index:2;
+    display:grid;
+    grid-template-columns:repeat(7,minmax(0,1fr));
+    gap:6px;
+    align-items:end;
+    min-height:270px;
+  }
+
+  .twmDay{
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    user-select:none;
+    position:relative;
+    transform:none !important;
+  }
+
+  .twmTopArea{
+    height:36px;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+    width:100%;
+    position:relative;
+    z-index:6;
+    pointer-events:none;
+    margin-bottom:2px;
+  }
+
+  .twmKcalTop{
+    width:38px;
+    height:38px;
+    border-radius:999px;
+    border:1.5px solid rgba(160,168,178,.42);
+    background:rgba(255,255,255,.96);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    line-height:1;
+    white-space:nowrap;
+    text-align:center;
+    color:#111;
+    letter-spacing:.01em;
+    pointer-events:none;
+    box-sizing:border-box;
+  }
+  body:not(.light) .twmKcalTop{
+    background:rgba(0,0,0,.92);
+    border-color:rgba(255,255,255,.22);
+    color:#fff;
+  }
+  .twmKcalTop .num{
+    font-size:9px;
+    font-weight:800;
+    line-height:1;
+  }
+  .twmKcalTop .unit{
+    font-size:7px;
+    font-weight:700;
+    color:#7a8088;
+    margin-top:1px;
+  }
+  body:not(.light) .twmKcalTop .unit{
+    color:rgba(255,255,255,.72);
+  }
+
+  .twmBarZone{
+    height:212px;
+    width:100%;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+  }
+
+  .twmCol{
+    width:100%;
+    max-width:28px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    transform:none !important;
+    transition:none !important;
+  }
+
+  .twmBar{
+    width:100%;
+    height:var(--barH,150px);
+    background:#fff;
+    border:1.5px solid rgba(182,188,196,.78);
+    border-radius:12px 12px 3px 3px;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-end;
+    box-shadow:none !important;
+    transition:height .24s ease, filter .18s ease;
+    position:relative;
+    transform:none !important;
+    box-sizing:border-box;
+  }
+  body:not(.light) .twmBar{
+    background:#000;
+    border-color:rgba(255,255,255,.24);
+  }
+
+  .twmDay.isSelected .twmBar::after{
+    content:"";
+    position:absolute;
+    inset:-4px;
+    border-radius:15px 15px 6px 6px;
+    pointer-events:none;
+    box-shadow:0 0 0 1.5px rgba(120,128,140,.18);
+  }
+  body:not(.light) .twmDay.isSelected .twmBar::after{
+    box-shadow:0 0 0 1.5px rgba(255,255,255,.22);
+  }
+
+  .twmSeg{
+    width:100%;
+    min-height:4px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    transition:height .24s ease;
+  }
+  .twmSeg.hasLabel{ min-height:18px; }
+  .twmSeg.p{ background:var(--p); }
+  .twmSeg.f{ background:var(--f); }
+  .twmSeg.c{ background:var(--c); }
+
+  .twmSeg + .twmSeg::before{
+    content:"";
+    position:absolute;
+    top:0;
+    left:0;
+    right:0;
+    height:1px;
+    background:rgba(255,255,255,.96);
+    pointer-events:none;
+  }
+
+  .twmSegLabel{
+    font-size:10px;
+    font-weight:800;
+    line-height:1;
+    letter-spacing:.01em;
+    pointer-events:none;
+  }
+  .light .twmSegLabel{ color:#fff; }
+  body:not(.light) .twmSegLabel{ color:#111; }
+
+  .twmBottom{
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:24px;
+    width:100%;
+  }
+
+  .twmDayLabel{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:22px;
+    border-radius:999px;
+    padding:2px 8px;
+    transition:
+      background .18s ease,
+      box-shadow .18s ease,
+      border-color .18s ease,
+      color .18s ease;
+    border:1px solid transparent;
+  }
+
+  .twmDay.isSelected .twmDayLabel{
+    background:rgba(120,128,140,.08);
+    border-color:rgba(120,128,140,.16);
+    box-shadow:0 1px 0 rgba(255,255,255,.4) inset;
+  }
+  body:not(.light) .twmDay.isSelected .twmDayLabel{
+    background:rgba(255,255,255,.08);
+    border-color:rgba(255,255,255,.16);
+    box-shadow:0 1px 0 rgba(255,255,255,.06) inset;
+  }
+
+  .twmLabel{
+    font-size:11px;
+    color:var(--muted);
+    line-height:1;
+    letter-spacing:.02em;
+    white-space:nowrap;
+  }
+  .twmDay.isSelected .twmLabel{
+    color:var(--text);
+    font-weight:800;
+    letter-spacing:.01em;
+  }
+  body:not(.light) .twmLabel{
+    color:rgba(255,255,255,.88);
+  }
+
+  .twmFormula{
+    margin-top:10px;
+    line-height:1.7;
+    opacity:.95;
+  }
+
+  @media (max-width:560px){
+    .twmChart{ gap:4px; }
+    .twmCol{ max-width:24px; }
+    .twmSegLabel{ font-size:9px; }
+    .twmMetaRow{ gap:10px; }
+    .twmLegend{ gap:10px; }
+    .twmKcalTop{
+      width:34px;
+      height:34px;
+    }
+    .twmKcalTop .num{ font-size:8px; }
+    .twmKcalTop .unit{ font-size:6.5px; }
+    .twmLabel{ font-size:10px; }
+  }
+</style>
+
+<script>
+(function(){
+  const $id = (id) => document.getElementById(id);
+
+  const section   = $id("transitionWeekMacroSection");
+  const chart     = $id("twmChart");
+  const lineSvg   = $id("twmLineSvg");
+  const avgEl     = $id("twmAvgText");
+  const formulaEl = $id("twmFormulaText");
+  const macroCard = $id("macroCard");
+  const scheduleCard = $id("scheduleCard");
+
+  if(!section || !chart || !lineSvg) return;
+
+  function shouldShow(){
+    const macroVisible = !!(macroCard && getComputedStyle(macroCard).display !== "none");
+    const scheduleVisible = !!(scheduleCard && getComputedStyle(scheduleCard).display !== "none");
+    return macroVisible && scheduleVisible && Array.isArray(window._series) && window._series.length > 0;
+  }
+
+  function updateVisibility(){
+    const show = shouldShow();
+    section.style.display = show ? "block" : "none";
+    return show;
+  }
+
+  function getActiveWeekIndex(){
+    const weekBtn = document.querySelector('#weekList .segBtn.active');
+    if(weekBtn && weekBtn.dataset.weekIndex != null) return +weekBtn.dataset.weekIndex;
+
+    const chartBtn = document.querySelector('#weekBtns button.active');
+    if(chartBtn && chartBtn.dataset.weekIndex != null) return +chartBtn.dataset.weekIndex;
+
+    return 0;
+  }
+
+  function getSelectedDayIndex(){
+    if(typeof window._selectedDay === "number") return window._selectedDay;
+    const activeDayBtn = document.querySelector('#dayBtns .segBtn.active');
+    if(activeDayBtn && activeDayBtn.dataset.dayGlobal != null) return +activeDayBtn.dataset.dayGlobal;
+    return 0;
+  }
+
+  function calcDayByIndex(dayIndex){
+    const series = window._series || [];
+    const ctx = window._ctxMeta || null;
+    if(!ctx || !series.length) return null;
+
+    const d = Math.max(0, Math.min(dayIndex, series.length - 1));
+    const { age, h, w, tdee, fitnessType } = ctx;
+
+    let carb_g = series[d];
+
+    const t = series.length > 1 ? d / (series.length - 1) : 1;
+    const P_LOW = 1.50, P_HIGH = 1.80;
+    let protein_g = w * (P_LOW + (P_HIGH - P_LOW) * t);
+
+    if(d === 0){
+      protein_g = Math.min(protein_g, 71.4);
+    }
+
+    let fat_g = (tdee - 4*protein_g - 4*carb_g) / 9;
+    if(fat_g < 0) fat_g = 0;
+
+    const rampDays = Math.min(14, series.length);
+    if(rampDays >= 1 && d < rampDays){
+      const alpha = (rampDays > 1) ? (d/(rampDays-1)) : 1;
+      const fatScale = 0.55 + 0.45*alpha;
+      fat_g *= fatScale;
+    }
+
+    if(typeof enforceFatFloor === "function"){
+      const adj = enforceFatFloor(protein_g, carb_g, fat_g, w);
+      protein_g = adj.protein_g;
+      carb_g = adj.carb_g;
+      fat_g = adj.fat_g;
+    }
+
+    const pk = protein_g * 4;
+    const ck = carb_g * 4;
+    const fk = fat_g * 9;
+    const kcal = pk + ck + fk;
+
+    return {
+      idx: d,
+      age,
+      h,
+      w,
+      fitnessType,
+      kcal: Math.round(kcal),
+      p: Math.round(protein_g),
+      f: Math.round(fat_g),
+      c: Math.round(carb_g),
+      pk: Math.round(pk),
+      fk: Math.round(fk),
+      ck: Math.round(ck)
+    };
+  }
+
+  function buildSmoothPath(points){
+    if(!points.length) return "";
+    if(points.length === 1) return `M ${points[0].x} ${points[0].y}`;
+
+    let d = `M ${points[0].x} ${points[0].y}`;
+    for(let i=0; i<points.length-1; i++){
+      const p0 = points[i-1] || points[i];
+      const p1 = points[i];
+      const p2 = points[i+1];
+      const p3 = points[i+2] || p2;
+
+      const cp1x = p1.x + (p2.x - p0.x) / 6;
+      const cp1y = p1.y + (p2.y - p0.y) / 6;
+      const cp2x = p2.x - (p3.x - p1.x) / 6;
+      const cp2y = p2.y - (p3.y - p1.y) / 6;
+
+      d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
+    }
+    return d;
+  }
+
+  function drawLine(dayData){
+    const maxK = Math.max(...dayData.map(d => d.kcal), 1);
+    const minY = 12;
+    const maxY = 84;
+    const stepX = 700 / 7;
+
+    const points = dayData.map((d, i) => {
+      const x = stepX * i + stepX / 2;
+      const y = maxY - ((d.kcal / maxK) * (maxY - minY));
+      return {x, y};
+    });
+
+    const path = buildSmoothPath(points);
+
+    lineSvg.innerHTML = `
+      <path class="twmLinePath" d="${path}"></path>
+      ${points.map((p) => `<circle class="twmLineMarker" cx="${p.x}" cy="${p.y}" r="4.8"></circle>`).join("")}
+    `;
+  }
+
+  function render(){
+    if(!updateVisibility()) return;
+
+    const series = window._series || [];
+    const weekIdx = getActiveWeekIndex();
+    const start = weekIdx * 7;
+    const selectedDay = getSelectedDayIndex();
+
+    const dayData = [];
+    for(let i=0; i<7; i++){
+      const globalIdx = start + i;
+      if(globalIdx >= series.length) break;
+      const day = calcDayByIndex(globalIdx);
+      if(day) dayData.push(day);
+    }
+
+    if(!dayData.length){
+      section.style.display = "none";
+      return;
+    }
+
+    const maxK = Math.max(...dayData.map(d => d.kcal), 1);
+
+    const avgPExact = dayData.reduce((s,d)=>s+d.p,0) / dayData.length;
+    const avgF = Math.round(dayData.reduce((s,d)=>s+d.f,0) / dayData.length);
+    const avgC = Math.round(dayData.reduce((s,d)=>s+d.c,0) / dayData.length);
+    const avgP = Math.round(avgPExact);
+
+    avgEl.textContent = `週平均：P${avgP}g / F${avgF}g / C${avgC}g`;
+
+    const weight = (window._ctxMeta && window._ctxMeta.w) ? window._ctxMeta.w : 0;
+    const effP = weight > 0 ? (avgPExact / weight) : 0;
+
+    formulaEl.textContent =
+      `実効p（週平均）≈${effP.toFixed(2)}g/kg｜F = {kcal - 4(P + C)} ÷ 9`;
+
+    chart.innerHTML = dayData.map((d, i) => {
+      const barH = Math.round((d.kcal / maxK) * 138) + 42;
+      const totalMacroKcal = Math.max(1, d.pk + d.fk + d.ck);
+
+      const pPct = (d.pk / totalMacroKcal) * 100;
+      const fPct = (d.fk / totalMacroKcal) * 100;
+      const cPct = (d.ck / totalMacroKcal) * 100;
+
+      const showP = pPct > 10;
+      const showF = fPct > 10;
+      const showC = d.c >= 50;
+
+      const label = `${d.idx + 1}日目`;
+      const isSelected = d.idx === selectedDay;
+
+      return `
+        <div class="twmDay ${isSelected ? "isSelected" : ""}" data-index="${d.idx}">
+          <div class="twmTopArea">
+            <div class="twmKcalTop">
+              <span class="num">${Number(d.kcal).toLocaleString()}</span>
+              <span class="unit">kcal</span>
+            </div>
+          </div>
+
+          <div class="twmBarZone">
+            <div class="twmCol">
+              <div class="twmBar" style="--barH:${barH}px">
+                <div class="twmSeg c ${showC ? "hasLabel":""}" style="height:${cPct}%">
+                  ${showC ? `<span class="twmSegLabel">${d.c}</span>` : ``}
+                </div>
+                <div class="twmSeg f ${showF ? "hasLabel":""}" style="height:${fPct}%">
+                  ${showF ? `<span class="twmSegLabel">${d.f}</span>` : ``}
+                </div>
+                <div class="twmSeg p ${showP ? "hasLabel":""}" style="height:${pPct}%">
+                  ${showP ? `<span class="twmSegLabel">${d.p}</span>` : ``}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="twmBottom">
+            <div class="twmDayLabel">
+              <div class="twmLabel">${label}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    drawLine(dayData);
+  }
+
+  function queueRender(){
+    requestAnimationFrame(() => requestAnimationFrame(render));
+  }
+
+  document.addEventListener("click", (e) => {
+    if(
+      e.target.closest('#weekList .segBtn') ||
+      e.target.closest('#weekBtns button') ||
+      e.target.closest('#dayBtns .segBtn') ||
+      e.target.closest('#tab-food') ||
+      e.target.closest('#tab-chart') ||
+      e.target.closest('#themeToggle') ||
+      e.target.closest('#calcBtn')
+    ){
+      queueRender();
+    }
+  });
+
+  [
+    "sex","age","height","weight","habit","fitnessType",
+    "curCarbSel","riceSel","breadSel","rootsSel"
+  ].forEach(id => {
+    const el = $id(id);
+    if(!el) return;
+    el.addEventListener("change", queueRender);
+    el.addEventListener("input", queueRender);
+  });
+
+  if(macroCard){
+    new MutationObserver(queueRender).observe(macroCard, { attributes:true, attributeFilter:["style","class"] });
+  }
+  if(scheduleCard){
+    new MutationObserver(queueRender).observe(scheduleCard, { attributes:true, attributeFilter:["style","class"] });
+  }
+
+  window.addEventListener("load", queueRender);
+  window.addEventListener("resize", queueRender);
+
+  const originalCalc = window.calc;
+  if(typeof originalCalc === "function" && !window.__twmWrappedCalc){
+    window.calc = function(){
+      const res = originalCalc.apply(this, arguments);
+      queueRender();
+      return res;
+    };
+    window.__twmWrappedCalc = true;
+  }
+
+  const originalSelectDay = window.selectDay;
+  if(typeof originalSelectDay === "function" && !window.__twmWrappedSelectDay){
+    window.selectDay = function(){
+      const res = originalSelectDay.apply(this, arguments);
+      queueRender();
+      return res;
+    };
+    window.__twmWrappedSelectDay = true;
+  }
+})();
+</script>
+<!-- ===== 週間マクロ配分（移行食プランナー用）：ここまで ===== -->
   <!-- 食材/糖質量推移タブ -->
   <div class="card" id="mixCard" style="display:none" aria-live="polite">
     <div class="tab duo" role="tablist" aria-label="食材/推移タブ">
