@@ -932,65 +932,23 @@ body:not(.light){
     return d;
   }
 
-      function drawLine(dayData){
-    if(!dayData || !dayData.length){
-      lineSvg.innerHTML = "";
-      return;
-    }
-
-    const kcals = dayData.map(d => d.kcal);
-    const rawMin = Math.min(...kcals);
-    const rawMax = Math.max(...kcals);
-    const avgK   = kcals.reduce((s,v)=>s+v,0) / kcals.length;
-
-    // 差が小さい週でもちゃんと上下して見えるように、最低レンジを確保
-    const minVisualRange = Math.max(120, avgK * 0.08); // 120kcal or 平均の8%
-    let spread = rawMax - rawMin;
-
-    let visualMin, visualMax;
-    if(spread < minVisualRange){
-      const mid = (rawMax + rawMin) / 2;
-      visualMin = mid - minVisualRange / 2;
-      visualMax = mid + minVisualRange / 2;
-    }else{
-      // 実際の範囲に少し余白を持たせる
-      const pad = Math.max(24, spread * 0.18);
-      visualMin = rawMin - pad;
-      visualMax = rawMax + pad;
-    }
-
-    const range = Math.max(1, visualMax - visualMin);
-
-    // 上下幅を広めに使う
-    const topY = 10;
-    const bottomY = 92;
-    const usableH = bottomY - topY;
+  function drawLine(dayData){
+    const maxK = Math.max(...dayData.map(d => d.kcal), 1);
+    const minY = 12;
+    const maxY = 84;
     const stepX = 700 / 7;
 
     const points = dayData.map((d, i) => {
       const x = stepX * i + stepX / 2;
-      const ratio = (d.kcal - visualMin) / range;
-      const y = bottomY - ratio * usableH;
-      return { x, y, kcal:d.kcal };
+      const y = maxY - ((d.kcal / maxK) * (maxY - minY));
+      return {x, y};
     });
 
     const path = buildSmoothPath(points);
 
-    // 参考ライン（上・中・下）
-    const yTop = topY;
-    const yMid = topY + usableH / 2;
-    const yBot = bottomY;
-
     lineSvg.innerHTML = `
-      <line x1="0" y1="${yTop}" x2="700" y2="${yTop}" stroke="rgba(160,168,178,.18)" stroke-width="1" stroke-dasharray="4 4"></line>
-      <line x1="0" y1="${yMid}" x2="700" y2="${yMid}" stroke="rgba(160,168,178,.14)" stroke-width="1" stroke-dasharray="4 4"></line>
-      <line x1="0" y1="${yBot}" x2="700" y2="${yBot}" stroke="rgba(160,168,178,.18)" stroke-width="1" stroke-dasharray="4 4"></line>
-
       <path class="twmLinePath" d="${path}"></path>
-
-      ${points.map((p) => `
-        <circle class="twmLineMarker" cx="${p.x}" cy="${p.y}" r="5.2"></circle>
-      `).join("")}
+      ${points.map((p) => `<circle class="twmLineMarker" cx="${p.x}" cy="${p.y}" r="4.8"></circle>`).join("")}
     `;
   }
 
