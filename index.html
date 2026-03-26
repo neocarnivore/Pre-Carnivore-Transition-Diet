@@ -933,22 +933,14 @@ body:not(.light){
   }
 
     function drawLine(dayData){
-  const minK = Math.min(...dayData.map(d => d.kcal));
-  const maxK = Math.max(...dayData.map(d => d.kcal));
-  const range = Math.max(maxK - minK, 1);
-
-  const pad = Math.max(20, range * 0.18); // ← 調整ポイント
-  const visualMin = minK - pad;
-  const visualMax = maxK + pad;
-  const visualRange = Math.max(visualMax - visualMin, 1);
-
-  const minY = 16;
-  const maxY = 82;
+  const maxK = Math.max(...dayData.map(d => d.kcal), 1);
+  const minY = 6;
+  const maxY = 90;
   const stepX = 700 / 7;
 
   const points = dayData.map((d, i) => {
     const x = stepX * i + stepX / 2;
-    const y = maxY - (((d.kcal - visualMin) / visualRange) * (maxY - minY));
+    const y = maxY - ((d.kcal / maxK) * (maxY - minY));
     return {x, y};
   });
 
