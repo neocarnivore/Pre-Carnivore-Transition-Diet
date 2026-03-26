@@ -249,6 +249,7 @@ body:not(.light){
           <label>現在の糖質量（g/日）</label>
           <select id="curCarbSel">
   <option value="" selected disabled>選択してください</option>
+  <option value="under100" data-mid="100">100g以下</option>
   <option value="100-150" data-mid="125">100〜150g</option>
   <option value="150-200" data-mid="175">150〜200g</option>
   <option value="200-250" data-mid="225">200〜250g</option>
@@ -2068,7 +2069,13 @@ function calc(){
 let ws, weeks;
 const curCarbSelVal = $("curCarbSel").value;
 
-if (curCarbSelVal === "100-150" || curCarbSelVal === "150-200") {
+if (curCarbSelVal === "under100") {
+  weeks = 2;
+  ws = {
+    weeks: 2,
+    step: diff / (2 * 7)
+  };
+} else if (curCarbSelVal === "100-150" || curCarbSelVal === "150-200") {
   weeks = 3;
   ws = {
     weeks: 3,
