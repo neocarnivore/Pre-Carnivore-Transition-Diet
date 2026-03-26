@@ -1622,35 +1622,62 @@ function enforceFatFloor(protein_g, carb_g, fat_g, body_w){
 
 /* 電解質：活動量/糖質量ベース（高糖質ではNa/Kやや控えめ） */
 function estimateElectrolytes(habit, fitnessType, currentCarb, w, age){
-  const af = parseFloat(habit)||1.2;
+  const af = parseFloat(habit) || 1.2;
   const scaleAF = clamp((af - 1.2) / (1.9 - 1.2), 0, 1);
   const isCardio = ["run","cycle","aerobic","club"].includes(fitnessType);
   const isPower  = ["strength","anaerobic","martial"].includes(fitnessType);
 
-  // Na
-  let na = 3600;
-  if(currentCarb <= 130) na += 600;
+  // 元コード寄りのベース
+  let naBase = 3600;
+  if(currentCarb <= 130) naBase += 600;
   if(currentCarb >= 250){
-    na -= (currentCarb >= 350) ? 500 : 300;
+    naBase -= (currentCarb >= 350) ? 500 : 300;
   }
-  na += Math.round(240 * scaleAF);
-  na += isCardio ? 40 : isPower ? 20 : 0;
-  na += Math.round(clamp(w - 60, -20, 40) * 2);
+  naBase += 240 * scaleAF;
+  naBase += isCardio ? 40 : isPower ? 20 : 0;
+  naBase += clamp(w - 60, -20, 40) * 2;
 
-  // K
-  let k = 3200;
-  k += Math.round(180 * scaleAF);
-  k += isCardio ? 80 : isPower ? 50 : 0;
-  k += Math.round((w - 60) * 8);
-  if(age >= 50) k += Math.round((age - 50) * 2);
-  if(currentCarb <= 130) k += 150;
-  if(currentCarb >= 250) k -= 150;
+  let kBase = 3200;
+  kBase += 180 * scaleAF;
+  kBase += isCardio ? 80 : isPower ? 50 : 0;
+  kBase += (w - 60) * 8;
+  if(age >= 50) kBase += (age - 50) * 2;
+  if(currentCarb <= 130) kBase += 150;
+  if(currentCarb >= 250) kBase -= 150;
 
-  // Mg
-  let mg = 400;
-  if(af >= 1.55) mg += 40;
-  mg += Math.round(16 * scaleAF);
-  mg += isCardio ? 6 : isPower ? 10 : 0;
+  let mgBase = 400;
+  if(af >= 1.55) mgBase += 40;
+  mgBase += 16 * scaleAF;
+  mgBase += isCardio ? 6 : isPower ? 10 : 0;
+
+  // 糖質が下がるほど少しずつ上がる連続補正
+  const carb = Number.isFinite(+currentCarb) ? +currentCarb : 0;
+  const carbFactor = clamp((130 - carb) / 130, 0, 1);
+
+  // 弱すぎず強すぎず
+  const naCarbMul = 1 + carbFactor * 0.010; // 最大+1.0%
+  const kCarbMul  = 1 + carbFactor * 0.005; // 最大+0.5%
+  const mgCarbMul = 1 + carbFactor * 0.006; // 最大+0.6%
+
+  // 運動タイプ補正はかなり控えめ
+  const sweatNaMul = isCardio ? 1.003 : isPower ? 1.0015 : 1.000;
+  const sweatKMul  = isCardio ? 1.0025 : isPower ? 1.0015 : 1.000;
+  const sweatMgMul = isCardio ? 1.0015 : isPower ? 1.0020 : 1.000;
+
+  // 日ごとの差が見える程度の微小ゆらぎ
+  const signature =
+    (carb * 0.173) +
+    (w * 0.071) +
+    (age * 0.037) +
+    (af * 0.193);
+
+  const microNa = 1 + (Math.sin(signature * 1.7) * 0.0012);
+  const microK  = 1 + (Math.sin(signature * 1.3 + 1.1) * 0.0010);
+  const microMg = 1 + (Math.sin(signature * 1.9 + 2.4) * 0.0009);
+
+  const na = naBase * naCarbMul * sweatNaMul * microNa;
+  const k  = kBase  * kCarbMul  * sweatKMul  * microK;
+  const mg = mgBase * mgCarbMul * sweatMgMul * microMg;
 
   return {
     k: Math.max(0, Math.round(k)),
