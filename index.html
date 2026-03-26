@@ -248,14 +248,15 @@ body:not(.light){
         <div>
           <label>現在の糖質量（g/日）</label>
           <select id="curCarbSel">
-            <option value="" selected disabled>選択してください</option>
-            <option value="150-200" data-mid="175">150〜200g</option>
-            <option value="200-250" data-mid="225">200〜250g</option>
-            <option value="250-300" data-mid="275">250〜300g</option>
-            <option value="300-400" data-mid="350">300〜400g</option>
-            <option value="400p"    data-mid="475">400g以上</option>
-            <option value="unknown">わからない</option>
-          </select>
+  <option value="" selected disabled>選択してください</option>
+  <option value="100-150" data-mid="125">100〜150g</option>
+  <option value="150-200" data-mid="175">150〜200g</option>
+  <option value="200-250" data-mid="225">200〜250g</option>
+  <option value="250-300" data-mid="275">250〜300g</option>
+  <option value="300-400" data-mid="350">300〜400g</option>
+  <option value="400p"    data-mid="475">400g以上</option>
+  <option value="unknown">わからない</option>
+</select>
         </div>
         <div id="riceDiv" style="display:none">
           <label>1日にお米を食べる量</label>
@@ -2063,10 +2064,22 @@ function calc(){
   const isEstimated = (selVal==="unknown");
   const unitText = isEstimated ? "g/日（推定）" : "g/日（目安）";
   const diff = Math.max(0, curCarb - 70);
-  const ws = chooseWeeksAndStep(diff, sex, age, $("habit").value, fitnessType);
-  const weeks = ws.weeks;
-  const series = generateCarbPlan(curCarb, weeks, $("habit").value, fitnessType, ws.step);
 
+let ws, weeks;
+const curCarbSelVal = $("curCarbSel").value;
+
+if (curCarbSelVal === "100-150" || curCarbSelVal === "150-200") {
+  weeks = 3;
+  ws = {
+    weeks: 3,
+    step: diff / (3 * 7)
+  };
+} else {
+  ws = chooseWeeksAndStep(diff, sex, age, $("habit").value, fitnessType);
+  weeks = ws.weeks;
+}
+
+const series = generateCarbPlan(curCarb, weeks, $("habit").value, fitnessType, ws.step);
   // 保存（グローバル状態）
   window._series = series;
   window._weeks = weeks;
