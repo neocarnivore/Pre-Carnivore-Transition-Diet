@@ -937,7 +937,7 @@ body:not(.light){
   const maxK = Math.max(...dayData.map(d => d.kcal));
   const range = Math.max(maxK - minK, 1);
 
-  const pad = Math.max(20, range * 0.14); // ← 調整ポイント
+  const pad = Math.max(20, range * 0.18); // ← 調整ポイント
   const visualMin = minK - pad;
   const visualMax = maxK + pad;
   const visualRange = Math.max(visualMax - visualMin, 1);
