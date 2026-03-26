@@ -944,7 +944,7 @@ body:not(.light){
     const avgK   = kcals.reduce((s,v)=>s+v,0) / kcals.length;
 
     // 差が小さい週でもちゃんと上下して見えるように、最低レンジを確保
-    const minVisualRange = Math.max(125, avgK * 0.09); // 120kcal or 平均の8%
+    const minVisualRange = Math.max(120, avgK * 0.08); // 120kcal or 平均の8%
     let spread = rawMax - rawMin;
 
     let visualMin, visualMax;
