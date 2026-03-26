@@ -933,14 +933,23 @@ body:not(.light){
   }
 
   function drawLine(dayData){
-  const maxK = Math.max(...dayData.map(d => d.kcal), 1);
-  const minY = 8;
-  const maxY = 88;
+  if(!dayData || !dayData.length){
+    lineSvg.innerHTML = "";
+    return;
+  }
+
+  const kcals = dayData.map(d => d.kcal);
+  const minK = Math.min(...kcals);
+  const maxK = Math.max(...kcals);
+  const range = Math.max(maxK - minK, 1);
+
+  const minY = 12;
+  const maxY = 84;
   const stepX = 700 / 7;
 
   const points = dayData.map((d, i) => {
     const x = stepX * i + stepX / 2;
-    const y = maxY - ((d.kcal / (maxK * 0.90)) * (maxY - minY));
+    const y = maxY - (((d.kcal - minK) / range) * (maxY - minY));
     return {x, y};
   });
 
@@ -951,7 +960,6 @@ body:not(.light){
     ${points.map((p) => `<circle class="twmLineMarker" cx="${p.x}" cy="${p.y}" r="4.8"></circle>`).join("")}
   `;
 }
-
   function render(){
     if(!updateVisibility()) return;
 
