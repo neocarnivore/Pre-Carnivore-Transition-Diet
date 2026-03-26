@@ -1683,7 +1683,7 @@ function computeFoodDistribution(kcalTotal, fitnessType, carb_g, dayIndex, total
   // 穀物の初期基準を記憶→最終日に100gへ向けて滑らかに
   if(dayIndex===0){ window._grainStartG = gGrain; }
   const gGrainStart = window._grainStartG || gGrain;
-  const gGrainDesired = Math.max(100, Math.round(100 + (gGrainStart - 100) * (1 - t)));
+  const gGrainDesired = Math.max(70, Math.round(70 + (gGrainStart - 70) * (1 - t)));
   gGrain = Math.min(gGrain, gGrainDesired); // 徐々に抑える（最終日100g）
 
   // 果物は280→170gへ調整（範囲クランプ）
