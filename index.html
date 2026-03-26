@@ -933,24 +933,24 @@ body:not(.light){
   }
 
   function drawLine(dayData){
-    const maxK = Math.max(...dayData.map(d => d.kcal), 1);
-    const minY = 6;
-    const maxY = 90;
-    const stepX = 700 / 7;
+  const maxK = Math.max(...dayData.map(d => d.kcal), 1);
+  const minY = 8;
+  const maxY = 88;
+  const stepX = 700 / 7;
 
-    const points = dayData.map((d, i) => {
-      const x = stepX * i + stepX / 2;
-      const y = maxY - ((d.kcal / maxK) * (maxY - minY));
-      return {x, y};
-    });
+  const points = dayData.map((d, i) => {
+    const x = stepX * i + stepX / 2;
+    const y = maxY - ((d.kcal / (maxK * 0.96)) * (maxY - minY));
+    return {x, y};
+  });
 
-    const path = buildSmoothPath(points);
+  const path = buildSmoothPath(points);
 
-    lineSvg.innerHTML = `
-      <path class="twmLinePath" d="${path}"></path>
-      ${points.map((p) => `<circle class="twmLineMarker" cx="${p.x}" cy="${p.y}" r="4.8"></circle>`).join("")}
-    `;
-  }
+  lineSvg.innerHTML = `
+    <path class="twmLinePath" d="${path}"></path>
+    ${points.map((p) => `<circle class="twmLineMarker" cx="${p.x}" cy="${p.y}" r="4.8"></circle>`).join("")}
+  `;
+}
 
   function render(){
     if(!updateVisibility()) return;
