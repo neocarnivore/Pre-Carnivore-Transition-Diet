@@ -354,7 +354,7 @@ body:not(.light){
       </div>
       <div class="kpi">
         <div class="small">目標の糖質量</div>
-        <b>100</b><div class="small">g/日</div>
+        <b>70</b><div class="small">g/日</div>
       </div>
     </div>
     <div class="small" id="repValuesNote" style="margin-top:8px;opacity:.95">
@@ -1793,7 +1793,7 @@ function chooseWeeksAndStep(diff, sex, age, habit, fitnessType){
 /* 糖質量の系列生成（±2gの自然な揺らぎを許容） */
 function generateCarbPlan(currentCarb, weeks, habit, fitnessType, stepPerDay){
   const days = Math.max(2, weeks*7);
-  const target = 100;
+  const target = 70;
   const diff = currentCarb - target;
 
   // 線形トレンド
@@ -1859,7 +1859,7 @@ function drawCarbChart({series, weekIndex}){
   const seg = series.slice(start, start+weekLen);
 
   const padL=68, padR=28, padT=28, padB=62;
-  const minY = 100;
+  const minY = 70;
   const maxY = Math.max(...seg)+10;
   const yRange=Math.max(1,maxY-minY);
   const plotW=W-padL-padR, plotH=H-padT-padB;
@@ -1902,7 +1902,7 @@ function drawCarbChart({series, weekIndex}){
   }
 
   ctx.strokeStyle="#ff7575"; ctx.setLineDash([6,6]);
-  ctx.beginPath(); ctx.moveTo(padL, yTo(100)); ctx.lineTo(W-padR, yTo(100)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(padL, yTo(70)); ctx.lineTo(W-padR, yTo(70)); ctx.stroke();
   ctx.setLineDash([]);
 
   ctx.save(); ctx.beginPath(); ctx.rect(padL, padT, plotW, plotH); ctx.clip();
@@ -2062,7 +2062,7 @@ function calc(){
   const selVal = $("curCarbSel").value;
   const isEstimated = (selVal==="unknown");
   const unitText = isEstimated ? "g/日（推定）" : "g/日（目安）";
-  const diff = Math.max(0, curCarb - 100);
+  const diff = Math.max(0, curCarb - 70);
   const ws = chooseWeeksAndStep(diff, sex, age, $("habit").value, fitnessType);
   const weeks = ws.weeks;
   const series = generateCarbPlan(curCarb, weeks, $("habit").value, fitnessType, ws.step);
