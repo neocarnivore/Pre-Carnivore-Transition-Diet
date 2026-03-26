@@ -933,33 +933,25 @@ body:not(.light){
   }
 
   function drawLine(dayData){
-  if(!dayData || !dayData.length){
-    lineSvg.innerHTML = "";
-    return;
+    const maxK = Math.max(...dayData.map(d => d.kcal), 1);
+    const minY = 12;
+    const maxY = 84;
+    const stepX = 700 / 7;
+
+    const points = dayData.map((d, i) => {
+      const x = stepX * i + stepX / 2;
+      const y = maxY - ((d.kcal / maxK) * (maxY - minY));
+      return {x, y};
+    });
+
+    const path = buildSmoothPath(points);
+
+    lineSvg.innerHTML = `
+      <path class="twmLinePath" d="${path}"></path>
+      ${points.map((p) => `<circle class="twmLineMarker" cx="${p.x}" cy="${p.y}" r="4.8"></circle>`).join("")}
+    `;
   }
 
-  const kcals = dayData.map(d => d.kcal);
-  const minK = Math.min(...kcals);
-  const maxK = Math.max(...kcals);
-  const range = Math.max(maxK - minK, 1);
-
-  const minY = 12;
-  const maxY = 84;
-  const stepX = 700 / 7;
-
-  const points = dayData.map((d, i) => {
-    const x = stepX * i + stepX / 2;
-    const y = maxY - (((d.kcal - minK) / range) * (maxY - minY));
-    return {x, y};
-  });
-
-  const path = buildSmoothPath(points);
-
-  lineSvg.innerHTML = `
-    <path class="twmLinePath" d="${path}"></path>
-    ${points.map((p) => `<circle class="twmLineMarker" cx="${p.x}" cy="${p.y}" r="4.8"></circle>`).join("")}
-  `;
-}
   function render(){
     if(!updateVisibility()) return;
 
@@ -2333,4 +2325,7 @@ window.addEventListener('resize', ()=>{
   _resizeId = requestAnimationFrame(()=>{ if(window._lastChartArgs) drawCarbChart(window._lastChartArgs); });
 });
 </script>
-</body>
+
+
+
+最小コードで。若干の傾斜のみ。数値変更のみで</body>
