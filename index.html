@@ -940,7 +940,7 @@ body:not(.light){
 
   const points = dayData.map((d, i) => {
     const x = stepX * i + stepX / 2;
-    const y = maxY - ((d.kcal / (maxK * 0.96)) * (maxY - minY));
+    const y = maxY - ((d.kcal / (maxK * 0.90)) * (maxY - minY));
     return {x, y};
   });
 
