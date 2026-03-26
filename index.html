@@ -934,8 +934,8 @@ body:not(.light){
 
   function drawLine(dayData){
     const maxK = Math.max(...dayData.map(d => d.kcal), 1);
-    const minY = 10;
-    const maxY = 86;
+    const minY = 8;
+    const maxY = 88;
     const stepX = 700 / 7;
 
     const points = dayData.map((d, i) => {
