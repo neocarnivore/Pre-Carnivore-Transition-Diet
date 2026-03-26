@@ -933,32 +933,32 @@ body:not(.light){
   }
 
     function drawLine(dayData){
-    const minK = Math.min(...dayData.map(d => d.kcal));
-    const maxK = Math.max(...dayData.map(d => d.kcal));
-    const range = Math.max(maxK - minK, 1);
+  const minK = Math.min(...dayData.map(d => d.kcal));
+  const maxK = Math.max(...dayData.map(d => d.kcal));
+  const range = Math.max(maxK - minK, 1);
 
-    const pad = Math.max(15, range * 0.12); // 少しだけ強調
-    const visualMin = minK - pad;
-    const visualMax = maxK + pad;
-    const visualRange = Math.max(visualMax - visualMin, 1);
+  const pad = Math.max(20, range * 0.14); // ← 調整ポイント
+  const visualMin = minK - pad;
+  const visualMax = maxK + pad;
+  const visualRange = Math.max(visualMax - visualMin, 1);
 
-    const minY = 10;
-    const maxY = 78;
-    const stepX = 700 / 7;
+  const minY = 16;
+  const maxY = 82;
+  const stepX = 700 / 7;
 
-    const points = dayData.map((d, i) => {
-      const x = stepX * i + stepX / 2;
-      const y = maxY - (((d.kcal - visualMin) / visualRange) * (maxY - minY));
-      return {x, y};
-    });
+  const points = dayData.map((d, i) => {
+    const x = stepX * i + stepX / 2;
+    const y = maxY - (((d.kcal - visualMin) / visualRange) * (maxY - minY));
+    return {x, y};
+  });
 
-    const path = buildSmoothPath(points);
+  const path = buildSmoothPath(points);
 
-    lineSvg.innerHTML = `
-      <path class="twmLinePath" d="${path}"></path>
-      ${points.map((p) => `<circle class="twmLineMarker" cx="${p.x}" cy="${p.y}" r="4.8"></circle>`).join("")}
-    `;
-  }
+  lineSvg.innerHTML = `
+    <path class="twmLinePath" d="${path}"></path>
+    ${points.map((p) => `<circle class="twmLineMarker" cx="${p.x}" cy="${p.y}" r="4.8"></circle>`).join("")}
+  `;
+}
 
   function render(){
     if(!updateVisibility()) return;
