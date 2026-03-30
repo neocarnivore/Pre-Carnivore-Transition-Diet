@@ -2246,17 +2246,26 @@ function computeFoodDistribution(kcalTotal, fitnessType, carb_g, dayIndex, total
   let gRoot  = kRoot  / (KCAL_PER_100G.root/100);
   let gFruit = kFruit / (KCAL_PER_100G.fruit/100);
 
-  // 穀物の初期基準を記憶→最終日に100gへ向けて滑らかに
-  if(dayIndex===0){ window._grainStartG = gGrain; }
+    // 穀物の初期基準を記憶→最終日に0gへ向けて滑らかに
+  if(dayIndex===0){
+    window._grainStartG = gGrain;
+    window._rootStartG  = gRoot;
+  }
   const gGrainStart = window._grainStartG || gGrain;
-  const gGrainDesired = Math.max(70, Math.round(70 + (gGrainStart - 70) * (1 - t)));
-  gGrain = Math.min(gGrain, gGrainDesired); // 徐々に抑える（最終日100g）
+  const gRootStart  = window._rootStartG  || gRoot;
 
-  // 果物は280→170gへ調整（範囲クランプ）
+  const gGrainDesired = Math.max(0, Math.round(gGrainStart * (1 - t)));
+  gGrain = Math.min(gGrain, gGrainDesired);
+
+  // 根菜は最終日に初期量の40%まで落とす
+  const gRootFloor = gRootStart * 0.40;
+  const gRootDesired = gRootFloor + (gRootStart - gRootFloor) * (1 - t);
+
+  // 果物は上限だけ管理
   const gFruitTarget = Math.round(280 - 110*t);
   const gFruitCeil = clamp(gFruitTarget, 170, 280);
   gFruit = Math.min(gFruit, gFruitCeil);
-
+  
   // 目標gから必要kcal（下項目合計ck内に収める）
   let needK = gGrain*(KCAL_PER_100G.grain/100) + gFruit*(KCAL_PER_100G.fruit/100);
   if(needK > ck*0.92){
@@ -2270,6 +2279,15 @@ function computeFoodDistribution(kcalTotal, fitnessType, carb_g, dayIndex, total
   kRoot  = Math.max(0, ck - (kGrain + kFruit));
   gRoot  = kRoot/(KCAL_PER_100G.root/100);
 
+  // 根菜を終盤ほど40%ラインへ寄せ、削った分は卵へ回すため退避
+  let eggBoostK = 0;
+  const rootTargetK = gRootDesired * (KCAL_PER_100G.root/100);
+  if(kRoot > rootTargetK){
+    eggBoostK = kRoot - rootTargetK;
+    kRoot = rootTargetK;
+    gRoot = kRoot/(KCAL_PER_100G.root/100);
+  }
+  
   // 並びの整合（前半：穀物≥根菜≥果物／後半：穀物≤根菜≤果物）をゆるく担保
   if(firstPhase){
     if(gRoot < gFruit){ // 根菜<果物なら根菜↑（穏やかに）
@@ -2297,17 +2315,36 @@ function computeFoodDistribution(kcalTotal, fitnessType, carb_g, dayIndex, total
 
   // 上項目（動物性）：残りkcalを分配（肉＞魚＞卵・乳製品を基本。前提として上項目>下項目は糖質漸減で自動的に強化）
   let animalRemain = Math.max(0, kcalTotal - (kGrain + kRoot + kFruit));
-  let sp = { meat:0.64, fish:0.18, eggdairy:0.18 };
+    let sp = { meat:0.64, fish:0.18, egg:0.08, dairy:0.10 };
 
   // 運動種別で微調整
-  if(["run","cycle","aerobic","club"].includes(fitnessType)){ sp.fish+=0.02; sp.meat-=0.02; }
-  else if(["strength","anaerobic","martial"].includes(fitnessType)){ sp.meat+=0.02; sp.eggdairy+=0.01; sp.fish-=0.03; }
-  const sumA = sp.meat+sp.fish+sp.eggdairy; for(const k in sp) sp[k]/=sumA;
+  if(["run","cycle","aerobic","club"].includes(fitnessType)){
+    sp.fish += 0.02;
+    sp.meat -= 0.02;
+  }else if(["strength","anaerobic","martial"].includes(fitnessType)){
+    sp.meat += 0.02;
+    sp.egg  += 0.01;
+    sp.fish -= 0.03;
+  }
 
-  let kMeat = animalRemain * sp.meat;
-  let kFish = animalRemain * sp.fish;
-  let kEggDairy = animalRemain * sp.eggdairy;
+  const sumA = sp.meat + sp.fish + sp.egg + sp.dairy;
+  for(const k in sp) sp[k] /= sumA;
 
+  let kMeat  = animalRemain * sp.meat;
+  let kFish  = animalRemain * sp.fish;
+  let kEgg   = animalRemain * sp.egg;
+  let kDairy = animalRemain * sp.dairy;
+
+  // 魚は70%にして、30%分を乳製品へ回す
+  const fishShift = kFish * 0.30;
+  kFish  -= fishShift;
+  kDairy += fishShift;
+
+  // 根菜から削った分は卵へ回す
+  kEgg += eggBoostK;
+
+  let kEggDairy = kEgg + kDairy;
+  
   // ⑦ 根菜/果物 ≤ 卵・乳製品（kcal基準）を満たすように最低ラインを確保
   const needED = Math.max(kRoot, kFruit) - kEggDairy;
   if(needED > 0){
@@ -2321,16 +2358,22 @@ function computeFoodDistribution(kcalTotal, fitnessType, carb_g, dayIndex, total
     const base = (w*5) + Math.max(0, h-150)*2; // 例：60kg/170cm → 360+40=400g
     return clamp(Math.round(base), 300, 500);
   })();
-  const edMaxK = capED * (KCAL_PER_100G.eggdairy/100);
+    const edMaxK = capED * (KCAL_PER_100G.eggdairy/100);
   if(kEggDairy > edMaxK){
     const excess = kEggDairy - edMaxK;
+    const eggRatio = kEggDairy > 0 ? (kEgg / kEggDairy) : 0.45;
+    const dairyRatio = 1 - eggRatio;
+
     kEggDairy = edMaxK;
+    kEgg   = kEggDairy * eggRatio;
+    kDairy = kEggDairy * dairyRatio;
+
     // 余剰は肉・魚へ返す（優先は肉）
     kMeat += excess * 0.8;
     kFish += excess * 0.2;
   }
 
-  return { kMeat, kFish, kEggDairy, kRoot, kGrain, kFruit };
+  return { kMeat, kFish, kEggDairy, kEgg, kDairy, kRoot, kGrain, kFruit };
 }
 
 /* 週あたり運動日（推移の微調整用） */
@@ -2776,11 +2819,11 @@ function selectDay(dayGlobalIndex, silent){
   $("gGrain").textContent     = round10(parts.kGrain /KCAL_PER_100G.grain*100);
   $("gFruit").textContent     = round10(parts.kFruit /KCAL_PER_100G.fruit*100);
 
-  const kEgg = Math.round(parts.kEggDairy * 0.45);
-  const kDairy = Math.round(parts.kEggDairy * 0.55);
+  const kEgg = Math.round(parts.kEgg || 0);
+  const kDairy = Math.round(parts.kDairy || 0);
   const gEgg = ((kEgg / 75) || 0).toFixed(1);
   const gDairy = round10(kDairy / 160 * 100);
-
+  
   $("metaMeatG").textContent = `${$("gMeat").textContent}g`;
   $("metaMeatK").textContent = `${$("kMeat").textContent}kcal`;
 
