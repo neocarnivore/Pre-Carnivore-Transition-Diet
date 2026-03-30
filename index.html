@@ -7,6 +7,28 @@
 <meta name="theme-color" content="#0b0b0f">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-avocado-194.png">
+
+<script>
+(() => {
+  const saved = localStorage.getItem('theme');
+  const isLight = saved === null || saved === 'light';
+  if (!isLight) return;
+
+  document.documentElement.classList.add('light');
+
+  const moveLightToBody = () => {
+    if (!document.body) {
+      requestAnimationFrame(moveLightToBody);
+      return;
+    }
+    document.body.classList.add('light');
+    document.documentElement.classList.remove('light');
+  };
+
+  moveLightToBody();
+})();
+</script>
+
 <style>
   :root{
     --bg:#0b0b0f;--card:#151821;--text:#e8eef6;--muted:#5c6e83;--acc:#48d1b5;--red:#ff7575;--input:#0f1218;--border:#23304a;
@@ -190,6 +212,312 @@ body:not(.light){
 }
 #presetManageBtn:active{
   transform:scale(.97);
+}
+#foodListTabSection{
+  overflow:visible;
+  padding-bottom:18px;
+}
+
+.foodListTop{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:14px;
+  padding-bottom:8px;
+}
+
+.foodListItem{
+  background:transparent;
+  border:none;
+  border-radius:0;
+  box-shadow:none;
+  overflow:hidden;
+}
+body:not(.light) .foodListItem{
+  background:transparent;
+  border:none;
+}
+
+.foodSubItem{
+  background:transparent;
+  border:none;
+  border-radius:18px;
+  box-shadow:none;
+  overflow:hidden;
+}
+body:not(.light) .foodSubItem{
+  background:#000;
+  border:1px solid rgba(255,255,255,.10);
+}
+
+.foodListBtn{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  padding:12px 2px 12px;
+  border:0;
+  border-bottom:1.5px solid transparent;
+  background:transparent;
+  color:#151515;
+  cursor:pointer;
+  text-align:left;
+  -webkit-tap-highlight-color:transparent;
+  transition:none;
+}
+body:not(.light) .foodListBtn{
+  background:#000;
+  color:#fff;
+}
+
+.foodSubBtn{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  padding:9px 12px 8px;
+  border:0;
+  background:#fff;
+  color:var(--text);
+  cursor:pointer;
+  text-align:left;
+  -webkit-tap-highlight-color:transparent;
+  transition:none;
+}
+body:not(.light) .foodSubBtn{
+  background:#000;
+  color:#fff;
+}
+
+.foodListLabel{
+  display:inline-flex;
+  align-items:center;
+  min-height:32px;
+  padding:0 15px;
+  border-radius:999px;
+  color:#fff;
+  font-size:clamp(13px,1.45vw,17px);
+  font-weight:800;
+  line-height:1.2;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.22);
+}
+
+.foodListMeta{
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-width:110px;
+  justify-content:flex-end;
+  font-size:12px;
+  font-weight:800;
+  line-height:1;
+  white-space:nowrap;
+  color:var(--text);
+}
+.foodListMeta .foodListMetaG{ opacity:.96; }
+.foodListMeta .foodListMetaK{ opacity:.62; font-weight:700; }
+body:not(.light) .foodListMeta{ color:#fff; }
+
+@media (max-width:749px){
+  .foodListMeta{
+    min-width:96px;
+    gap:6px;
+    font-size:11px;
+  }
+}
+
+.foodListBtn[data-tone="p"] .foodListLabel{ background:var(--p); }
+.foodListBtn[data-tone="f"] .foodListLabel{ background:var(--f); }
+.foodListBtn[data-tone="c"] .foodListLabel{ background:var(--c); }
+
+.foodListBtn[data-tone="p"]{ border-bottom-color:rgba(42,161,255,.28); }
+.foodListBtn[data-tone="f"]{ border-bottom-color:rgba(255,180,84,.30); }
+.foodListBtn[data-tone="c"]{ border-bottom-color:rgba(72,209,181,.28); }
+
+.foodSubLabel{
+  display:inline-flex;
+  align-items:center;
+  min-height:26px;
+  padding:4px 11px;
+  border-radius:999px;
+  background:#fff !important;
+  color:#151515;
+  font-size:12px;
+  font-weight:800;
+  line-height:1.35;
+  box-shadow:none;
+  border:1px solid transparent;
+  white-space:normal;
+  text-align:left;
+  max-width:calc(100% - 40px);
+}
+body:not(.light) .foodSubLabel{
+  background:#000 !important;
+  color:#fff;
+}
+
+.foodSubBtn[data-tone="p"] .foodSubLabel{ border-color:var(--p); }
+.foodSubBtn[data-tone="f"] .foodSubLabel{ border-color:var(--f); }
+.foodSubBtn[data-tone="c"] .foodSubLabel{ border-color:var(--c); }
+
+.foodListArrow{
+  position:relative;
+  width:42px;
+  height:42px;
+  min-width:42px;
+  border-radius:999px;
+  background:#fff;
+  border:1.5px solid rgba(160,160,160,.16);
+  box-shadow:0 8px 18px rgba(0,0,0,.05);
+  transition:none;
+}
+
+.foodListBtn[data-tone="p"] .foodListArrow{
+  border-color:rgba(42,161,255,.18);
+  box-shadow:0 8px 18px rgba(42,161,255,.10);
+}
+.foodListBtn[data-tone="f"] .foodListArrow{
+  border-color:rgba(255,180,84,.20);
+  box-shadow:0 8px 18px rgba(255,180,84,.10);
+}
+.foodListBtn[data-tone="c"] .foodListArrow{
+  border-color:rgba(72,209,181,.20);
+  box-shadow:0 8px 18px rgba(72,209,181,.10);
+}
+
+.foodSubArrow{
+  position:relative;
+  width:28px;
+  height:28px;
+  min-width:28px;
+  border-radius:999px;
+  background:#fff;
+  border:1.5px solid rgba(140,140,140,.16);
+  box-shadow:0 8px 18px rgba(0,0,0,.05);
+  transition:none;
+}
+
+body:not(.light) .foodListArrow,
+body:not(.light) .foodSubArrow{
+  background:#000;
+  border-color:rgba(255,255,255,.16);
+  box-shadow:none;
+}
+
+.foodListArrow::before,
+.foodListArrow::after,
+.foodSubArrow::before,
+.foodSubArrow::after{
+  content:"";
+  position:absolute;
+  top:50%;
+  left:50%;
+  width:9px;
+  height:2px;
+  border-radius:999px;
+  transform-origin:center;
+  transition:transform .52s cubic-bezier(.22,1,.36,1), opacity .32s ease;
+}
+
+.foodListBtn[data-tone="p"] .foodListArrow::before,
+.foodListBtn[data-tone="p"] .foodListArrow::after,
+.foodSubBtn[data-tone="p"] .foodSubArrow::before,
+.foodSubBtn[data-tone="p"] .foodSubArrow::after{
+  background:var(--p);
+}
+.foodListBtn[data-tone="f"] .foodListArrow::before,
+.foodListBtn[data-tone="f"] .foodListArrow::after,
+.foodSubBtn[data-tone="f"] .foodSubArrow::before,
+.foodSubBtn[data-tone="f"] .foodSubArrow::after{
+  background:var(--f);
+}
+.foodListBtn[data-tone="c"] .foodListArrow::before,
+.foodListBtn[data-tone="c"] .foodListArrow::after,
+.foodSubBtn[data-tone="c"] .foodSubArrow::before,
+.foodSubBtn[data-tone="c"] .foodSubArrow::after{
+  background:var(--c);
+}
+
+.foodListArrow::before,
+.foodSubArrow::before{
+  width:10px;
+  height:2px;
+  transform:translate(-50%,-50%) rotate(0deg);
+}
+.foodListArrow::after,
+.foodSubArrow::after{
+  width:2px;
+  height:10px;
+  transform:translate(-50%,-50%) rotate(0deg);
+}
+
+.foodListItem.is-open > .foodListBtn .foodListArrow::after,
+.foodSubItem.is-open > .foodSubBtn .foodSubArrow::after{
+  opacity:0;
+  transform:translate(-50%,-50%) scaleY(.15);
+}
+
+.foodListContent,
+.foodSubContent{
+  max-height:0;
+  overflow:hidden;
+  opacity:0;
+  transform:translateY(-10px);
+  transition:
+    max-height .78s cubic-bezier(.22,1,.36,1),
+    opacity .42s ease,
+    transform .56s cubic-bezier(.22,1,.36,1);
+  will-change:max-height, transform, opacity;
+}
+
+.foodListItem.is-opening > .foodListContent,
+.foodSubItem.is-opening > .foodSubContent{
+  transition:
+    max-height .92s cubic-bezier(.22,1,.36,1),
+    opacity .48s ease,
+    transform .62s cubic-bezier(.22,1,.36,1);
+}
+
+.foodListItem.is-open > .foodListContent,
+.foodSubItem.is-open > .foodSubContent{
+  opacity:1;
+  transform:translateY(0);
+}
+
+.foodListContentInner{
+  padding:8px 12px 16px;
+  display:grid;
+  gap:10px;
+}
+.foodSubContentInner{
+  padding:10px 18px 22px;
+}
+.foodLeaf{
+  margin:0;
+  color:var(--text);
+  font-size:13px;
+  line-height:1.9;
+  white-space:normal;
+}
+
+.foodSubBtn{ min-height:44px; }
+.foodSubContent{ overflow:visible; }
+.foodListItem.is-open{ overflow:hidden; }
+.foodSubItem.is-open{ overflow:visible; }
+
+@media (max-width:749px){
+  .foodListItem{ border-radius:0; }
+  .foodListBtn{ padding:14px 14px 12px; gap:12px; }
+  .foodListLabel{ min-height:32px; padding:0 14px; font-size:12px; }
+  .foodSubBtn{ min-height:48px; }
+  .foodSubLabel{ font-size:11px; padding:5px 10px; }
+  .foodListArrow{ width:36px; height:36px; min-width:36px; }
+  .foodSubArrow{ width:24px; height:24px; min-width:24px; }
+  .foodListContentInner{ padding:8px 8px 14px; }
+  .foodSubContentInner{ padding:8px 16px 20px; }
+  .foodLeaf{ font-size:12px; line-height:1.8; }
 }
 </style>
 </head>
@@ -414,7 +742,7 @@ body:not(.light){
     <section id="foodSection" class="section" style="display:block">
       <h3>食材別の目安摂取量</h3>
       <div class="row6">
-        <div class="kpi"><span class="small">肉</span><b id="gMeat">–</b><span class="small">g</span><div class="small">≈ <b id="kMeat">–</b> kcal</div><div class="bar p"><span id="meatbar"></span></div></div>
+        <div class="kpi"><span class="small">肉類</span><b id="gMeat">–</b><span class="small">g</span><div class="small">≈ <b id="kMeat">–</b> kcal</div><div class="bar p"><span id="meatbar"></span></div></div>
         <div class="kpi"><span class="small">魚介類</span><b id="gFish">–</b><span class="small">g</span><div class="small">≈ <b id="kFish">–</b> kcal</div><div class="bar p"><span id="fishbar"></span></div></div>
         <div class="kpi"><span class="small">卵・乳製品</span><b id="gEggDairy">–</b><span class="small">g</span><div class="small">≈ <b id="kEggDairy">–</b> kcal</div><div class="bar f"><span id="eggdairybar"></span></div></div>
         <div class="kpi"><span class="small">根菜</span><b id="gRoot">–</b><span class="small">g</span><div class="small">≈ <b id="kRoot">–</b> kcal</div><div class="bar c"><span id="rootbar"></span></div></div>
@@ -1111,6 +1439,148 @@ document.addEventListener("touchend", function(e){
 })();
 </script>
 <!-- ===== 週間マクロ配分（移行食プランナー用）：ここまで ===== -->
+  <div class="card" id="foodListTabSection" style="display:none" aria-live="polite">
+    <h3>食材リスト</h3>
+
+    <div class="foodListTop">
+
+      <div class="foodListItem">
+        <button type="button" class="foodListBtn" data-tone="p">
+          <span class="foodListLabel">肉類</span>
+          <span class="foodListMeta">
+            <span id="metaMeatG" class="foodListMetaG">–g</span>
+            <span id="metaMeatK" class="foodListMetaK">–kcal</span>
+          </span>
+          <span class="foodListArrow" aria-hidden="true"></span>
+        </button>
+        <div class="foodListContent">
+          <div class="foodListContentInner">
+            <div class="foodSubItem"><button type="button" class="foodSubBtn" data-tone="p"><span class="foodSubLabel">牛肉</span><span class="foodSubArrow" aria-hidden="true"></span></button><div class="foodSubContent"><div class="foodSubContentInner"><p class="foodLeaf">肩ロース / サーロイン / リブロース / バラ / モモ / ひき肉 / スネ / タン / スジ / ハツ / レバー / ミノ / ハラミ / センマイ / ハチノス / テール</p></div></div></div>
+            <div class="foodSubItem"><button type="button" class="foodSubBtn" data-tone="p"><span class="foodSubLabel">豚肉</span><span class="foodSubArrow" aria-hidden="true"></span></button><div class="foodSubContent"><div class="foodSubContentInner"><p class="foodLeaf">肩ロース / バラ / ヒレ / モモ / ホルモン / 豚トロ / ひき肉 / 軟骨 / レバー / ハツ / ガツ / スペアリブ / ミミガー / テビチ（豚足） / アンダカシー</p></div></div></div>
+            <div class="foodSubItem"><button type="button" class="foodSubBtn" data-tone="p"><span class="foodSubLabel">鶏肉</span><span class="foodSubArrow" aria-hidden="true"></span></button><div class="foodSubContent"><div class="foodSubContentInner"><p class="foodLeaf">もも / むね / ひき肉 / 手先 / 手元 / ぼんじり / ササミ / 砂肝 / レバー / ハツ / 軟骨 / 皮</p></div></div></div>
+            <div class="foodSubItem"><button type="button" class="foodSubBtn" data-tone="p"><span class="foodSubLabel">羊肉</span><span class="foodSubArrow" aria-hidden="true"></span></button><div class="foodSubContent"><div class="foodSubContentInner"><p class="foodLeaf">ラムチョップ / 肩 / モモ / 挽肉 / マトン各部位</p></div></div></div>
+            <div class="foodSubItem"><button type="button" class="foodSubBtn" data-tone="p"><span class="foodSubLabel">馬肉</span><span class="foodSubArrow" aria-hidden="true"></span></button><div class="foodSubContent"><div class="foodSubContentInner"><p class="foodLeaf">赤身 / たてがみ / ハツ / レバー</p></div></div></div>
+            <div class="foodSubItem"><button type="button" class="foodSubBtn" data-tone="p"><span class="foodSubLabel">ジビエ</span><span class="foodSubArrow" aria-hidden="true"></span></button><div class="foodSubContent"><div class="foodSubContentInner"><p class="foodLeaf">鹿（ロース・モモ・レバー） / 猪 / 鴨 / 兎 etc.</p></div></div></div>
+            <div class="foodSubItem"><button type="button" class="foodSubBtn" data-tone="p"><span class="foodSubLabel">加工肉（無添加）</span><span class="foodSubArrow" aria-hidden="true"></span></button><div class="foodSubContent"><div class="foodSubContentInner"><p class="foodLeaf">生ハム / ベーコン / ソーセージ / サラミ</p></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="foodListItem">
+        <button type="button" class="foodListBtn" data-tone="p">
+          <span class="foodListLabel">魚介類</span>
+          <span class="foodListMeta">
+            <span id="metaFishG" class="foodListMetaG">–g</span>
+            <span id="metaFishK" class="foodListMetaK">–kcal</span>
+          </span>
+          <span class="foodListArrow" aria-hidden="true"></span>
+        </button>
+        <div class="foodListContent">
+          <div class="foodListContentInner">
+            <div class="foodSubItem"><button type="button" class="foodSubBtn" data-tone="p"><span class="foodSubLabel">青魚</span><span class="foodSubArrow" aria-hidden="true"></span></button><div class="foodSubContent"><div class="foodSubContentInner"><p class="foodLeaf">サバ / イワシ / サンマ / アジ / サワラ / ニシン / ブリ / カツオ</p></div></div></div>
+            <div class="foodSubItem"><button type="button" class="foodSubBtn" data-tone="p"><span class="foodSubLabel">白身魚</span><span class="foodSubArrow" aria-hidden="true"></span></button><div class="foodSubContent"><div class="foodSubContentInner"><p class="foodLeaf">タラ / カレイ / ヒラメ / スズキ / タイ / メバル / アイナメ</p></div></div></div>
+            <div class="foodSubItem"><button type="button" class="foodSubBtn" data-tone="p"><span class="foodSubLabel">赤身魚</span><span class="foodSubArrow" aria-hidden="true"></span></button><div class="foodSubContent"><div class="foodSubContentInner"><p class="foodLeaf">マグロ（赤身・トロ） / カツオ / サーモン / マス</p></div></div></div>
+            <div class="foodSubItem"><button type="button" class="foodSubBtn" data-tone="p"><span class="foodSubLabel">小魚</span><span class="foodSubArrow" aria-hidden="true"></span></button><div class="foodSubContent"><div class="foodSubContentInner"><p class="foodLeaf">シシャモ / ワカサギ / キビナゴ / シラス / ちりめんじゃこ / イカナゴ</p></div></div></div>
+            <div class="foodSubItem"><button type="button" class="foodSubBtn" data-tone="p"><span class="foodSubLabel">干物</span><span class="foodSubArrow" aria-hidden="true"></span></button><div class="foodSubContent"><div class="foodSubContentInner"><p class="foodLeaf">アジ / ホッケ / サンマ / カマス / ノドグロ</p></div></div></div>
+            <div class="foodSubItem"><button type="button" class="foodSubBtn" data-tone="p"><span class="foodSubLabel">貝類</span><span class="foodSubArrow" aria-hidden="true"></span></button><div class="foodSubContent"><div class="foodSubContentInner"><p class="foodLeaf">アサリ / シジミ / ハマグリ / ホタテ / サザエ / アワビ / ムール貝</p></div></div></div>
+            <div class="foodSubItem"><button type="button" class="foodSubBtn" data-tone="p"><span class="foodSubLabel">甲殻類</span><span class="foodSubArrow" aria-hidden="true"></span></button><div class="foodSubContent"><div class="foodSubContentInner"><p class="foodLeaf">エビ / カニ（ズワイ・タラバ） / シャコ</p></div></div></div>
+            <div class="foodSubItem"><button type="button" class="foodSubBtn" data-tone="p"><span class="foodSubLabel">軟体類</span><span class="foodSubArrow" aria-hidden="true"></span></button><div class="foodSubContent"><div class="foodSubContentInner"><p class="foodLeaf">イカ（スルメ・ヤリ・ケンサキ） / タコ（真ダコ・イイダコ）</p></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="foodListItem">
+        <button type="button" class="foodListBtn" data-tone="f">
+          <span class="foodListLabel">卵</span>
+          <span class="foodListMeta">
+            <span id="metaEggG" class="foodListMetaG">–個</span>
+            <span id="metaEggK" class="foodListMetaK">–kcal</span>
+          </span>
+          <span class="foodListArrow" aria-hidden="true"></span>
+        </button>
+        <div class="foodListContent">
+          <div class="foodListContentInner">
+            <div class="foodSubItem"><button type="button" class="foodSubBtn" data-tone="f"><span class="foodSubLabel">鶏卵</span><span class="foodSubArrow" aria-hidden="true"></span></button><div class="foodSubContent"><div class="foodSubContentInner"><p class="foodLeaf">白玉 / 赤玉</p></div></div></div>
+            <div class="foodSubItem"><button type="button" class="foodSubBtn" data-tone="f"><span class="foodSubLabel">うずら卵</span><span class="foodSubArrow" aria-hidden="true"></span></button><div class="foodSubContent"><div class="foodSubContentInner"><p class="foodLeaf">うずら卵</p></div></div></div>
+            <div class="foodSubItem"><button type="button" class="foodSubBtn" data-tone="f"><span class="foodSubLabel">アヒル卵</span><span class="foodSubArrow" aria-hidden="true"></span></button><div class="foodSubContent"><div class="foodSubContentInner"><p class="foodLeaf">アヒル卵</p></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="foodListItem">
+        <button type="button" class="foodListBtn" data-tone="f">
+          <span class="foodListLabel">乳製品</span>
+          <span class="foodListMeta">
+            <span id="metaDairyG" class="foodListMetaG">–g</span>
+            <span id="metaDairyK" class="foodListMetaK">–kcal</span>
+          </span>
+          <span class="foodListArrow" aria-hidden="true"></span>
+        </button>
+        <div class="foodListContent">
+          <div class="foodListContentInner">
+            <div class="foodSubItem"><button type="button" class="foodSubBtn" data-tone="f"><span class="foodSubLabel">チーズ類</span><span class="foodSubArrow" aria-hidden="true"></span></button><div class="foodSubContent"><div class="foodSubContentInner"><p class="foodLeaf">モッツァレラ / チェダー / ゴーダ / カマンベール / ブルーチーズ / パルメザン / リコッタ / フェタ / カッテージ</p></div></div></div>
+            <div class="foodSubItem"><button type="button" class="foodSubBtn" data-tone="f"><span class="foodSubLabel">発酵乳</span><span class="foodSubArrow" aria-hidden="true"></span></button><div class="foodSubContent"><div class="foodSubContentInner"><p class="foodLeaf">ヨーグルト（無糖） / ギリシャヨーグルト / サワークリーム / ケフィア</p></div></div></div>
+            <div class="foodSubItem"><button type="button" class="foodSubBtn" data-tone="f"><span class="foodSubLabel">非発酵乳</span><span class="foodSubArrow" aria-hidden="true"></span></button><div class="foodSubContent"><div class="foodSubContentInner"><p class="foodLeaf">バター / 生クリーム（純乳脂肪） / ギー</p></div></div></div>
+            <div class="foodSubItem"><button type="button" class="foodSubBtn" data-tone="f"><span class="foodSubLabel">牛乳</span><span class="foodSubArrow" aria-hidden="true"></span></button><div class="foodSubContent"><div class="foodSubContentInner"><p class="foodLeaf">生乳 / 成分無調整牛乳（A2推奨） / 低温殺菌牛乳</p></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="foodListItem">
+        <button type="button" class="foodListBtn" data-tone="c">
+          <span class="foodListLabel">根菜</span>
+          <span class="foodListMeta">
+            <span id="metaRootG" class="foodListMetaG">–g</span>
+            <span id="metaRootK" class="foodListMetaK">–kcal</span>
+          </span>
+          <span class="foodListArrow" aria-hidden="true"></span>
+        </button>
+        <div class="foodListContent">
+          <div class="foodListContentInner">
+            <div class="foodSubItem"><button type="button" class="foodSubBtn" data-tone="c"><span class="foodSubLabel">芋類</span><span class="foodSubArrow" aria-hidden="true"></span></button><div class="foodSubContent"><div class="foodSubContentInner"><p class="foodLeaf">じゃがいも / 里芋 / 長芋 / 山芋</p></div></div></div>
+            <div class="foodSubItem"><button type="button" class="foodSubBtn" data-tone="c"><span class="foodSubLabel">かぶ系</span><span class="foodSubArrow" aria-hidden="true"></span></button><div class="foodSubContent"><div class="foodSubContentInner"><p class="foodLeaf">大根 / かぶ / にんじん / れんこん / ごぼう</p></div></div></div>
+            <div class="foodSubItem"><button type="button" class="foodSubBtn" data-tone="c"><span class="foodSubLabel">その他</span><span class="foodSubArrow" aria-hidden="true"></span></button><div class="foodSubContent"><div class="foodSubContentInner"><p class="foodLeaf">ほうれん草 / 小松菜 / チンゲン菜 / レタス / キャベツ / 白菜 / 水菜 / ブロッコリー / カリフラワー / 玉ねぎ / 白ねぎ / 青ねぎ / ニラ / しいたけ / まいたけ / えのき / しめじ / エリンギ / マッシュルーム / なめこ / トマト / アボカド / 茄子 / きゅうり / ピーマン / パプリカ / ズッキーニ / ゴーヤ etc.</p></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="foodListItem">
+        <button type="button" class="foodListBtn" data-tone="c">
+          <span class="foodListLabel">穀物</span>
+          <span class="foodListMeta">
+            <span id="metaGrainG" class="foodListMetaG">–g</span>
+            <span id="metaGrainK" class="foodListMetaK">–kcal</span>
+          </span>
+          <span class="foodListArrow" aria-hidden="true"></span>
+        </button>
+        <div class="foodListContent">
+          <div class="foodListContentInner">
+            <div class="foodSubItem"><button type="button" class="foodSubBtn" data-tone="c"><span class="foodSubLabel">イネ科</span><span class="foodSubArrow" aria-hidden="true"></span></button><div class="foodSubContent"><div class="foodSubContentInner"><p class="foodLeaf">白米 / 玄米 / 五穀米 / 雑穀米 / とうもろこし</p></div></div></div>
+            <div class="foodSubItem"><button type="button" class="foodSubBtn" data-tone="c"><span class="foodSubLabel">マメ科</span><span class="foodSubArrow" aria-hidden="true"></span></button><div class="foodSubContent"><div class="foodSubContentInner"><p class="foodLeaf">大豆（枝豆・黒豆・納豆・豆腐） / ひよこ豆 / いんげん豆 / えんどう豆（スナップえんどう・グリーンピース） / そら豆 / 小豆（無糖）</p></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="foodListItem">
+        <button type="button" class="foodListBtn" data-tone="c">
+          <span class="foodListLabel">果物</span>
+          <span class="foodListMeta">
+            <span id="metaFruitG" class="foodListMetaG">–g</span>
+            <span id="metaFruitK" class="foodListMetaK">–kcal</span>
+          </span>
+          <span class="foodListArrow" aria-hidden="true"></span>
+        </button>
+        <div class="foodListContent">
+          <div class="foodListContentInner">
+            <div class="foodSubItem"><button type="button" class="foodSubBtn" data-tone="c"><span class="foodSubLabel">ベリー類</span><span class="foodSubArrow" aria-hidden="true"></span></button><div class="foodSubContent"><div class="foodSubContentInner"><p class="foodLeaf">ブルーベリー / ラズベリー / ブラックベリー / クランベリー / いちご</p></div></div></div>
+            <div class="foodSubItem"><button type="button" class="foodSubBtn" data-tone="c"><span class="foodSubLabel">柑橘類</span><span class="foodSubArrow" aria-hidden="true"></span></button><div class="foodSubContent"><div class="foodSubContentInner"><p class="foodLeaf">グレープフルーツ / レモン / ライム / ゆず</p></div></div></div>
+            <div class="foodSubItem"><button type="button" class="foodSubBtn" data-tone="c"><span class="foodSubLabel">その他（控えめ）</span><span class="foodSubArrow" aria-hidden="true"></span></button><div class="foodSubContent"><div class="foodSubContentInner"><p class="foodLeaf">バナナ / りんご / 梨 / キウイ / パイナップル / ぶどう / マスカット / みかん / オレンジ / マンゴー / スイカ / メロン / プラム / さくらんぼ / 桃 / 柿 etc.</p></div></div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
   <p class="small footerNote" style="margin-top:20px">
     各プランはカーニボア食・ケトジェニック食を支持する医師・医学博士らの文献・著書・研究のもと設計しています。<br>
     参考: Virta Health（<a href="https://www.youtube.com/@VirtaHealth" target="_blank" rel="noopener">YouTube</a>） / The Noakes Foundation（<a href="https://www.youtube.com/@TheNoakesFoundation" target="_blank" rel="noopener">YouTube</a>）
@@ -1119,6 +1589,74 @@ document.addEventListener("touchend", function(e){
 
 <script>
 const $ = id => document.getElementById(id);
+
+document.addEventListener("click", (e)=>{
+  const topBtn = e.target.closest(".foodListBtn");
+  const subBtn = e.target.closest(".foodSubBtn");
+
+  const syncOpenFoodHeights = () => {
+    requestAnimationFrame(() => {
+      document.querySelectorAll(".foodSubItem.is-open > .foodSubContent").forEach(el=>{
+        el.style.maxHeight = (el.scrollHeight + 80) + "px";
+      });
+      document.querySelectorAll(".foodListItem.is-open > .foodListContent").forEach(el=>{
+        el.style.maxHeight = (el.scrollHeight + 120) + "px";
+      });
+    });
+  };
+
+  if(topBtn){
+    const item = topBtn.parentElement;
+    const content = item.querySelector(":scope > .foodListContent");
+    if(!item || !content) return;
+
+    const isOpen = item.classList.contains("is-open");
+
+    if(!isOpen){
+      item.classList.add("is-opening");
+      item.classList.add("is-open");
+      content.style.maxHeight = (content.scrollHeight + 120) + "px";
+      setTimeout(()=>item.classList.remove("is-opening"), 1000);
+    }else{
+      item.classList.remove("is-opening");
+      item.classList.remove("is-open");
+      content.style.maxHeight = "0px";
+    }
+
+    syncOpenFoodHeights();
+    return;
+  }
+
+  if(subBtn){
+    const item = subBtn.parentElement;
+    const content = item.querySelector(":scope > .foodSubContent");
+    if(!item || !content) return;
+
+    const isOpen = item.classList.contains("is-open");
+
+    if(!isOpen){
+      item.classList.add("is-opening");
+      item.classList.add("is-open");
+      content.style.maxHeight = (content.scrollHeight + 80) + "px";
+      setTimeout(()=>item.classList.remove("is-opening"), 1000);
+    }else{
+      item.classList.remove("is-opening");
+      item.classList.remove("is-open");
+      content.style.maxHeight = "0px";
+    }
+
+    syncOpenFoodHeights();
+  }
+});
+
+window.addEventListener("resize", ()=>{
+  document.querySelectorAll(".foodSubItem.is-open > .foodSubContent").forEach(el=>{
+    el.style.maxHeight = (el.scrollHeight + 80) + "px";
+  });
+  document.querySelectorAll(".foodListItem.is-open > .foodListContent").forEach(el=>{
+    el.style.maxHeight = (el.scrollHeight + 120) + "px";
+  });
+});
 
 /* ユーティリティ */
 const clamp = (x, lo, hi) => Math.min(hi, Math.max(lo, x));
@@ -1349,7 +1887,7 @@ function resetFormAll(){
   $("breadDiv").style.display = "none";
   $("rootsDiv").style.display = "none";
 
-  ["baseCard","nowGoalCard","macroCard","mixCard","scheduleCard"].forEach(id=>{
+    ["baseCard","nowGoalCard","macroCard","mixCard","scheduleCard","foodListTabSection"].forEach(id=>{
     const el = $(id);
     if(el) el.style.display = "none";
   });
@@ -2150,6 +2688,7 @@ const series = generateCarbPlan(curCarb, weeks, $("habit").value, fitnessType, w
   $("baseCard").style.display="block";
   $("macroCard").style.display="block";
   $("mixCard").style.display="block";
+  $("foodListTabSection").style.display="block";
 }
 
 /* 日別適用：糖質は系列値。脂質は下限確保分は内部加算（表記なし）。TDEEには一致させない */
@@ -2237,6 +2776,31 @@ function selectDay(dayGlobalIndex, silent){
   $("gGrain").textContent     = round10(parts.kGrain /KCAL_PER_100G.grain*100);
   $("gFruit").textContent     = round10(parts.kFruit /KCAL_PER_100G.fruit*100);
 
+  const kEgg = Math.round(parts.kEggDairy * 0.45);
+  const kDairy = Math.round(parts.kEggDairy * 0.55);
+  const gEgg = ((kEgg / 75) || 0).toFixed(1);
+  const gDairy = round10(kDairy / 160 * 100);
+
+  $("metaMeatG").textContent = `${$("gMeat").textContent}g`;
+  $("metaMeatK").textContent = `${$("kMeat").textContent}kcal`;
+
+  $("metaFishG").textContent = `${$("gFish").textContent}g`;
+  $("metaFishK").textContent = `${$("kFish").textContent}kcal`;
+
+  $("metaEggG").textContent = `${gEgg}個`;
+  $("metaEggK").textContent = `${kEgg}kcal`;
+
+  $("metaDairyG").textContent = `${gDairy}g`;
+  $("metaDairyK").textContent = `${kDairy}kcal`;
+
+  $("metaRootG").textContent = `${$("gRoot").textContent}g`;
+  $("metaRootK").textContent = `${$("kRoot").textContent}kcal`;
+
+  $("metaGrainG").textContent = `${$("gGrain").textContent}g`;
+  $("metaGrainK").textContent = `${$("kGrain").textContent}kcal`;
+
+  $("metaFruitG").textContent = `${$("gFruit").textContent}g`;
+  $("metaFruitK").textContent = `${$("kFruit").textContent}kcal`;
   updateFoodBars(
     {meat:parts.kMeat, fish:parts.kFish, eggdairy:parts.kEggDairy, root:parts.kRoot, grain:parts.kGrain, fruit:parts.kFruit},
     kcal
@@ -2315,7 +2879,7 @@ function restoreFormFresh(){
     else el.value = "";
   });
 
-  ["baseCard","nowGoalCard","macroCard","mixCard","scheduleCard"].forEach(id=>{
+    ["baseCard","nowGoalCard","macroCard","mixCard","scheduleCard","foodListTabSection"].forEach(id=>{
     const el = $(id);
     if(el) el.style.display = "none";
   });
