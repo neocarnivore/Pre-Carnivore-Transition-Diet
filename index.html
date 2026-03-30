@@ -2231,11 +2231,17 @@ function computeFoodDistribution(kcalTotal, fitnessType, carb_g, dayIndex, total
   const t = (totalDays>1) ? dayIndex/(totalDays-1) : 1; // 0→1
 
   // 週ごとの重み：前半（〜2週）は「穀物＞根菜＞果物」、3週目以降は「穀物＜根菜＜果物」
-  const firstPhase = dayIndex < 14; // 2週間=14日
-  let wG = firstPhase ? 0.50 : 0.25; // grain
-  let wR = firstPhase ? 0.30 : 0.35; // root
-  let wF = firstPhase ? 0.20 : 0.40; // fruit
-  const sumW = wG + wR + wF; wG/=sumW; wR/=sumW; wF/=sumW;
+  const firstPhase = dayIndex < 14; // 既存の下の分岐で使うので残す
+
+// 段差切替ではなく、全期間でなめらかに移す
+let wG = 0.50 + (0.25 - 0.50) * t; // grain: 0.50 → 0.25
+let wR = 0.30 + (0.35 - 0.30) * t; // root : 0.30 → 0.35
+let wF = 0.20 + (0.40 - 0.20) * t; // fruit: 0.20 → 0.40
+
+const sumW = wG + wR + wF;
+wG /= sumW;
+wR /= sumW;
+wF /= sumW;
 
   // 基本の下項目kcal
   let kGrain = ck * wG;
@@ -2292,23 +2298,23 @@ function computeFoodDistribution(kcalTotal, fitnessType, carb_g, dayIndex, total
   // 並びの整合（前半：穀物≥根菜≥果物／後半：穀物≤根菜≤果物）をゆるく担保
   if(firstPhase){
     if(gRoot < gFruit){ // 根菜<果物なら根菜↑（穏やかに）
-      const diff = (gFruit - gRoot)*0.6;
+      const diff = (gFruit - gRoot)*0.18;
       const kNeed = diff*(KCAL_PER_100G.root/100);
       if(kGrain > kNeed){ kRoot+=kNeed; kGrain-=kNeed; gRoot+=diff; gGrain-= (kNeed/(KCAL_PER_100G.grain/100)); }
     }
     if(gGrain < gRoot){ // 穀物<根菜なら穀物↑
-      const diff = (gRoot - gGrain)*0.6;
+      const diff = (gRoot - gGrain)*0.18;
       const kNeed = diff*(KCAL_PER_100G.grain/100);
       if(kRoot > kNeed){ kGrain+=kNeed; kRoot-=kNeed; gGrain+=diff; gRoot-= (kNeed/(KCAL_PER_100G.root/100)); }
     }
   }else{
     if(gRoot > gFruit){ // 後半は根菜≤果物
-      const diff = (gRoot - gFruit)*0.6;
+      const diff = (gRoot - gFruit)*0.18;
       const kMove = diff*(KCAL_PER_100G.root/100);
       if(kRoot > kMove){ kRoot-=kMove; kFruit+=kMove; gRoot-=diff; gFruit+= (kMove/(KCAL_PER_100G.fruit/100)); }
     }
     if(gGrain > gRoot){ // 後半は穀物≤根菜
-      const diff = (gGrain - gRoot)*0.6;
+      const diff = (gGrain - gRoot)*0.18;
       const kMove = diff*(KCAL_PER_100G.grain/100);
       if(kGrain > kMove){ kGrain-=kMove; kRoot+=kMove; gGrain-=diff; gRoot+= (kMove/(KCAL_PER_100G.root/100)); }
     }
@@ -2316,17 +2322,22 @@ function computeFoodDistribution(kcalTotal, fitnessType, carb_g, dayIndex, total
 
   // 上項目（動物性）：残りkcalを分配（肉＞魚＞卵・乳製品を基本。前提として上項目>下項目は糖質漸減で自動的に強化）
   let animalRemain = Math.max(0, kcalTotal - (kGrain + kRoot + kFruit));
-    let sp = { meat:0.64, fish:0.18, egg:0.08, dairy:0.10 };
+    let sp = {
+  meat: 0.64,
+  fish: 0.18,
+  egg:  0.08 + 0.10 * t, // 終盤に向けて卵を増やす
+  dairy: 0.10 - 0.10 * t // その分乳製品を下げる
+};
 
-  // 運動種別で微調整
-  if(["run","cycle","aerobic","club"].includes(fitnessType)){
-    sp.fish += 0.02;
-    sp.meat -= 0.02;
-  }else if(["strength","anaerobic","martial"].includes(fitnessType)){
-    sp.meat += 0.02;
-    sp.egg  += 0.01;
-    sp.fish -= 0.03;
-  }
+// 運動種別で微調整
+if(["run","cycle","aerobic","club"].includes(fitnessType)){
+  sp.fish += 0.02;
+  sp.meat -= 0.02;
+}else if(["strength","anaerobic","martial"].includes(fitnessType)){
+  sp.meat += 0.02;
+  sp.egg  += 0.01;
+  sp.fish -= 0.03;
+}
 
   const sumA = sp.meat + sp.fish + sp.egg + sp.dairy;
   for(const k in sp) sp[k] /= sumA;
