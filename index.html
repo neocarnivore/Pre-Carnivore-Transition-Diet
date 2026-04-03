@@ -14,6 +14,9 @@
 
   const saved = localStorage.getItem('theme');
   const isLight = saved === null || saved === 'light';
+  if (sessionStorage.getItem("skipOpeningOnce") === "1") {
+    document.documentElement.classList.add("skip-opening");
+  }
   if (!isLight) return;
 
   document.documentElement.classList.add('light');
@@ -50,6 +53,10 @@
 }
 
 .planner-booting body{
+  opacity:0;
+}
+
+.planner-booting.skip-opening body{
   opacity:0;
 }
 
@@ -537,7 +544,7 @@ body:not(.light) .foodSubArrow{
     linear-gradient(180deg, var(--bg), #0b0b0f);
   opacity:1;
   visibility:visible;
-  transition:opacity .68s ease, visibility .68s ease;
+  transition:opacity .52s ease, visibility .52s ease;
   pointer-events:none;
 }
 
@@ -648,6 +655,71 @@ body.light #neoOpening{
   to{opacity:.9;transform:translateX(-50%) translateY(0)}
 }
 /* ===== opening splash：ここまで ===== */
+/* ===== action fx：追加 ===== */
+#neoActionFx{
+  position:fixed;
+  inset:0;
+  z-index:9998;
+  pointer-events:none;
+  overflow:hidden;
+}
+
+#neoActionFx::before,
+#neoActionFx::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  opacity:0;
+  pointer-events:none;
+}
+
+body.fx-calc #neoActionFx::before{
+  background:radial-gradient(circle at 50% 50%, rgba(72,209,181,.22), rgba(72,209,181,0) 58%);
+  animation:neoCalcFlash .26s ease-out both;
+}
+body.fx-calc #neoActionFx::after{
+  inset:auto;
+  left:50%;
+  top:50%;
+  width:110px;
+  height:110px;
+  border-radius:999px;
+  border:2px solid rgba(72,209,181,.35);
+  transform:translate(-50%,-50%) scale(.72);
+  animation:neoCalcPulse .34s cubic-bezier(.22,1,.36,1) both;
+}
+
+body.fx-reset #neoActionFx::before{
+  background:linear-gradient(90deg, rgba(72,209,181,0) 0%, rgba(72,209,181,.16) 50%, rgba(72,209,181,0) 100%);
+  transform:translateX(-100%);
+  animation:neoResetSweep .22s ease-out both;
+}
+body.fx-reset #neoActionFx::after{
+  background:rgba(72,209,181,.08);
+  animation:neoResetFlash .18s ease-out both;
+}
+
+@keyframes neoCalcFlash{
+  0%{opacity:0}
+  25%{opacity:1}
+  100%{opacity:0}
+}
+@keyframes neoCalcPulse{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.72)}
+  35%{opacity:1}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(1.28)}
+}
+@keyframes neoResetSweep{
+  0%{opacity:0;transform:translateX(-100%)}
+  20%{opacity:1}
+  100%{opacity:0;transform:translateX(100%)}
+}
+@keyframes neoResetFlash{
+  0%{opacity:0}
+  35%{opacity:1}
+  100%{opacity:0}
+}
+/* ===== action fx：ここまで ===== */
 </style>
 </head>
 <body>
@@ -660,7 +732,7 @@ body.light #neoOpening{
     <div class="neoOpening__text">TRANSITION PLANNER</div>
   </div>
 </div>
-
+<div id="neoActionFx" aria-hidden="true"></div>
 <header>
   <div style="display:flex;align-items:center;gap:8px;min-width:0">
     <div>移行食プランナー🥑</div>
@@ -1802,6 +1874,19 @@ const clamp = (x, lo, hi) => Math.min(hi, Math.max(lo, x));
 const round10 = v => Math.round(v/10)*10;
 const PRESET_KEY = "transition_planner_presets_v1";
 const LAST_PRESET_KEY = "transition_planner_last_preset_v1";
+function playActionFx(type, done){
+  const cls = type === "calc" ? "fx-calc" : "fx-reset";
+  const dur = type === "calc" ? 340 : 220;
+
+  document.body.classList.remove("fx-calc","fx-reset");
+  void document.body.offsetWidth;
+  document.body.classList.add(cls);
+
+  setTimeout(()=>{
+    document.body.classList.remove("fx-calc","fx-reset");
+    if(typeof done === "function") done();
+  }, dur);
+}
 function getCurrentFormData(){
   return {
     sex:$("sex").value,
@@ -2070,7 +2155,7 @@ function updateThemeBtn(){
 $('themeToggle').addEventListener('click', toggleTheme);
 applyThemeFromStorage();
 $("saveBtn").addEventListener("click", saveCurrentPreset);
-$("resetBtn").addEventListener("click", resetFormAll);
+$("resetBtn").addEventListener("click", ()=> playActionFx("reset", resetFormAll));
 $("presetSelect").addEventListener("change", loadSelectedPreset);
 
 $("presetManageBtn").addEventListener("click", (e)=>{
@@ -2214,17 +2299,21 @@ $("calcBtn").addEventListener("click", ()=>{
       localStorage.setItem(LAST_PRESET_KEY, selectedName);
     }
 
-    if(document.activeElement && typeof document.activeElement.blur === 'function'){ document.activeElement.blur(); }
-    const vp = document.querySelector('meta[name="viewport"]');
-    if(vp){
-      const orig = vp.getAttribute('content');
-      vp.setAttribute('content','width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover');
-      setTimeout(()=>{ vp.setAttribute('content', orig); }, 0);
-    }
-    window.scrollTo({top:0, left:0, behavior:'auto'});
-    saveFormToSession();
-    sessionStorage.setItem("autocalc","1");
-    location.reload();
+    playActionFx("calc", ()=>{
+  if(document.activeElement && typeof document.activeElement.blur === 'function'){ document.activeElement.blur(); }
+  const vp = document.querySelector('meta[name="viewport"]');
+  if(vp){
+    const orig = vp.getAttribute('content');
+    vp.setAttribute('content','width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover');
+    setTimeout(()=>{ vp.setAttribute('content', orig); }, 0);
+  }
+  window.scrollTo({top:0, left:0, behavior:'auto'});
+  saveFormToSession();
+  sessionStorage.setItem("autocalc","1");
+  sessionStorage.setItem("skipOpeningOnce","1");
+  location.reload();
+});
+return;
   }else{
     const pressed = $("calcBtn").getAttribute("aria-pressed")==="true";
     $("calcBtn").setAttribute("aria-pressed", pressed?"false":"true");
@@ -3110,6 +3199,9 @@ if(!restoredAutoCalc){
 }
 
 refreshPresetSelect();
+requestAnimationFrame(() => {
+  document.documentElement.classList.remove("planner-booting");
+});
 
 requestAnimationFrame(() => {
   document.documentElement.classList.remove("planner-booting");
@@ -3125,6 +3217,13 @@ window.addEventListener('resize', ()=>{
 window.addEventListener("load", ()=>{
   const opening = document.getElementById("neoOpening");
   if(!opening) return;
+
+  if(sessionStorage.getItem("skipOpeningOnce") === "1"){
+    sessionStorage.removeItem("skipOpeningOnce");
+    opening.remove();
+    document.documentElement.classList.remove("skip-opening");
+    return;
+  }
 
   setTimeout(()=>{
     opening.classList.add("is-hide");
