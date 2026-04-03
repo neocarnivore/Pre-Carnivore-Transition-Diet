@@ -10,6 +10,8 @@
 
 <script>
 (() => {
+  document.documentElement.classList.add("planner-booting");
+
   const saved = localStorage.getItem('theme');
   const isLight = saved === null || saved === 'light';
   if (!isLight) return;
@@ -45,6 +47,10 @@
   margin:0;
   background:linear-gradient(180deg,var(--bg),#10131b00);
   color:var(--text);
+}
+
+.planner-booting body{
+  opacity:0;
 }
 
 body:not(.light){
@@ -3104,6 +3110,10 @@ if(!restoredAutoCalc){
 }
 
 refreshPresetSelect();
+
+requestAnimationFrame(() => {
+  document.documentElement.classList.remove("planner-booting");
+});
 
 /* リサイズ時の再描画 */
 let _resizeId;
