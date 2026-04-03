@@ -2111,10 +2111,12 @@ function resetFormAll(){
   $("breadDiv").style.display = "none";
   $("rootsDiv").style.display = "none";
 
-    ["baseCard","nowGoalCard","macroCard","mixCard","scheduleCard","foodListTabSection"].forEach(id=>{
-    const el = $(id);
-    if(el) el.style.display = "none";
-  });
+    ["baseCard","nowGoalCard","macroCard","mixCard","scheduleCard","foodListTabSection","transitionWeekMacroSection"].forEach(id=>{
+  const el = $(id);
+  if(el) el.style.display = "none";
+});
+if($("twmChart")) $("twmChart").innerHTML = "";
+if($("twmLineSvg")) $("twmLineSvg").innerHTML = "";
 
   if($("presetSelect")) $("presetSelect").value = "";
 
@@ -3162,10 +3164,12 @@ function restoreFormFresh(){
     else el.value = "";
   });
 
-    ["baseCard","nowGoalCard","macroCard","mixCard","scheduleCard","foodListTabSection"].forEach(id=>{
-    const el = $(id);
-    if(el) el.style.display = "none";
-  });
+    ["baseCard","nowGoalCard","macroCard","mixCard","scheduleCard","foodListTabSection","transitionWeekMacroSection"].forEach(id=>{
+  const el = $(id);
+  if(el) el.style.display = "none";
+});
+if($("twmChart")) $("twmChart").innerHTML = "";
+if($("twmLineSvg")) $("twmLineSvg").innerHTML = "";
 
   $("fitnessType").disabled = true;
   setNoneOptionVisible("fitnessType", false);
