@@ -3218,21 +3218,30 @@ window.addEventListener('resize', ()=>{
   _resizeId = requestAnimationFrame(()=>{ if(window._lastChartArgs) drawCarbChart(window._lastChartArgs); });
 });
 /* ===== opening splash：追加 ===== */
-window.addEventListener("load", ()=>{
-  const opening = document.getElementById("neoOpening");
-  if(!opening) return;
+(function(){
+  const closeOpening = () => {
+    const opening = document.getElementById("neoOpening");
+    if(!opening || opening.dataset.closing === "1") return;
 
-  if(sessionStorage.getItem("skipOpeningOnce") === "1"){
-    sessionStorage.removeItem("skipOpeningOnce");
-    opening.remove();
-    document.documentElement.classList.remove("skip-opening");
-    return;
-  }
+    if(sessionStorage.getItem("skipOpeningOnce") === "1"){
+      sessionStorage.removeItem("skipOpeningOnce");
+      opening.remove();
+      document.documentElement.classList.remove("skip-opening");
+      return;
+    }
 
-  setTimeout(()=>{
-    opening.classList.add("is-hide");
-    setTimeout(()=>opening.remove(), 700);
-  }, 1150);
-});
+    opening.dataset.closing = "1";
+
+    requestAnimationFrame(()=>{
+      setTimeout(()=>{
+        opening.classList.add("is-hide");
+        setTimeout(()=>opening.remove(), 700);
+      }, 1150);
+    });
+  };
+
+  window.addEventListener("pageshow", closeOpening, { once:true });
+  window.addEventListener("load", closeOpening, { once:true });
+})();
 /* ===== opening splash：ここまで ===== */
 </script>
